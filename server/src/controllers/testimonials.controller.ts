@@ -50,9 +50,9 @@ export const upsertTestimonial = async (req: AuthRequest, res: Response) => {
         `, [id || null, quote, client_name, designation, company, engagement_type, rating || 5, image_url || null, is_visible !== undefined ? is_visible : true]);
 
         res.json(result.rows[0]);
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error upserting testimonial:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 

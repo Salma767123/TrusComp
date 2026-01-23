@@ -177,7 +177,6 @@ export const upsertSetting = async (req: AuthRequest, res: Response) => {
         res.json(result.rows[0]);
     } catch (err: any) {
         console.error('Error upserting setting:', err);
-        // Return actual database error for debugging
         res.status(500).json({ message: 'Failed to save setting', error: err.message });
     }
 };

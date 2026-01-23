@@ -44,9 +44,9 @@ export const upsertHoliday = async (req: AuthRequest, res: Response) => {
         `, [id || null, state_code, holiday_date, day_name, holiday_name, holiday_type || 'Gazetted']);
 
         res.json(result.rows[0]);
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error upserting holiday:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 

@@ -124,9 +124,7 @@ export const upsertResource = async (req: Request, res: Response) => {
 
     } catch (err: any) {
         console.error('Upsert resource error FULL OBJECT:', JSON.stringify(err, null, 2));
-        console.error('Upsert resource error message:', err.message);
-        console.error('Upsert resource stack:', err.stack);
-        res.status(500).json({ message: 'Error saving resource: ' + err.message });
+        res.status(500).json({ message: 'Error saving resource', error: err.message });
     }
 };
 

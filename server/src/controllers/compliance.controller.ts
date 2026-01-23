@@ -66,9 +66,9 @@ export const upsertComplianceUpdate = async (req: AuthRequest, res: Response) =>
         `, [id || null, slug, title, summary, category, state, date_text, impact, action_required, overview_content, what_changed_content, who_it_impacts_content, what_you_should_do_content]);
 
         res.json(result.rows[0]);
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error upserting compliance update:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 

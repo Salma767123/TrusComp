@@ -234,6 +234,48 @@ const initAdminDb = async () => {
                 value JSONB NOT NULL
             );
 
+            -- 5. SEO Metadata
+            CREATE TABLE IF NOT EXISTS seo_meta (
+                id SERIAL PRIMARY KEY,
+                page_type VARCHAR(50) NOT NULL,
+                page_reference_id VARCHAR(100),
+                meta_title VARCHAR(255),
+                meta_description TEXT,
+                meta_keywords TEXT,
+                canonical_url TEXT,
+                og_title VARCHAR(255),
+                og_description TEXT,
+                og_image TEXT,
+                twitter_title VARCHAR(255),
+                twitter_description TEXT,
+                robots VARCHAR(100) DEFAULT 'index, follow',
+                schema_type VARCHAR(100) DEFAULT 'Organization',
+                status VARCHAR(20) DEFAULT 'published',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            DROP INDEX IF EXISTS idx_seo_page_unique;
+            CREATE UNIQUE INDEX idx_seo_page_unique ON seo_meta (page_type, COALESCE(page_reference_id, ''));
+
+            -- 6. Labour Law Updates
+            CREATE TABLE IF NOT EXISTS labour_law_updates (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                release_date DATE NOT NULL,
+                end_date DATE,
+                is_visible BOOLEAN DEFAULT TRUE,
+                speaker_name VARCHAR(255),
+                speaker_role VARCHAR(255),
+                speaker_org VARCHAR(255),
+                speaker_image TEXT,
+                documents JSONB,
+                videos JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
             -- Seed default categories for services if not exists
             INSERT INTO settings (key, value)
             VALUES ('service_categories', '["Labor law Compliance", "Audit & Verification", "Licensing & Registration", "Industrial Relations", "Payroll & Remittances"]')

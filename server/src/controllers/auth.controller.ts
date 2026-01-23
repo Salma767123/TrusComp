@@ -46,9 +46,9 @@ export const login = async (req: Request, res: Response) => {
             user: { id: admin.id, name: admin.name, email: admin.email, role: admin.role }
         });
 
-    } catch (err) {
+    } catch (err: any) {
         console.error('Login error:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 
@@ -143,9 +143,9 @@ export const initiateEmailChange = async (req: AuthRequest, res: Response) => {
 
         res.json({ message: 'Verification email sent' });
 
-    } catch (err) {
+    } catch (err: any) {
         console.error('Initiate email change error:', err);
-        res.status(500).json({ message: 'Failed to initiate email change' });
+        res.status(500).json({ message: 'Failed to initiate email change', error: err.message });
     }
 };
 
@@ -267,9 +267,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
         res.json({ message: 'If an account exists with this email, a reset link has been sent.' });
 
-    } catch (err) {
+    } catch (err: any) {
         console.error('Forgot password error:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 
@@ -305,8 +305,8 @@ export const resetPassword = async (req: Request, res: Response) => {
 
         res.json({ message: 'Password has been reset successfully. Please login with your new password.' });
 
-    } catch (err) {
+    } catch (err: any) {
         console.error('Reset password error:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };

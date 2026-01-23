@@ -21,9 +21,9 @@ export const submitEnquiry = async (req: Request, res: Response) => {
             message: 'Enquiry submitted successfully',
             data: result.rows[0]
         });
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error submitting enquiry:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 
@@ -56,9 +56,9 @@ export const createEnquiry = async (req: AuthRequest, res: Response) => {
         `, [name, email, phone, service_interest, message, status || 'new', notes, confirmed_at]);
 
         res.status(201).json(result.rows[0]);
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error creating enquiry:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 
@@ -89,9 +89,9 @@ export const updateEnquiry = async (req: AuthRequest, res: Response) => {
         `, [name, email, phone, service_interest, message, status, notes, confirmed_at, id]);
 
         res.json(result.rows[0]);
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error updating enquiry:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 

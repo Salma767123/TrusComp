@@ -71,9 +71,9 @@ export const upsertSEO = async (req: AuthRequest, res: Response) => {
         ]);
 
         res.json(result.rows[0]);
-    } catch (err) {
+    } catch (err: any) {
         console.error('Error upserting SEO:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 };
 
