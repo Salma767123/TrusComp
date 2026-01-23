@@ -34,10 +34,16 @@ const loginLimiter = rateLimit({
 });
 
 // Middleware
-app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:8080',
-    credentials: true
-}));
+const corsOptions = {
+    origin: 'https://truscomp-frontend.vercel.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight
 app.use(cookieParser());
 app.use(express.json());
 
