@@ -41,6 +41,11 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json());
 
+// Minimal root route for Vercel deployment verification
+app.get('/', (req: Request, res: Response) => {
+    res.send('Backend is running');
+});
+
 // Routes
 app.use('/api/v1/auth', loginLimiter, authRoutes);
 app.use('/api/v1/admin', adminRoutes);
@@ -82,9 +87,14 @@ const startServer = async () => {
     // Initialize DB schema (add missing columns if needed)
     await initAdminDb();
 
-    app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
-    });
+    // Only listen if NOT in Vercel environment
+    if (!process.env.VERCEL) {
+        app.listen(PORT, () => {
+            console.log(`Server is running on http://localhost:${PORT}`);
+        });
+    }
 };
 
 startServer();
+
+export default app;
