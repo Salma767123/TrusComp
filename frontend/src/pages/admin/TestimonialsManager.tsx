@@ -51,7 +51,8 @@ const TestimonialsManager = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/api/v1/testimonials', { credentials: 'include' });
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/testimonials`, { credentials: 'include' });
             if (response.ok) {
                 const data = await response.json();
                 setTestimonials(data);
@@ -72,7 +73,8 @@ const TestimonialsManager = () => {
         if (!selectedItem) return;
         setIsSaving(true);
         try {
-            const response = await fetch('/api/v1/testimonials/upsert', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/testimonials/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedItem),
@@ -97,7 +99,8 @@ const TestimonialsManager = () => {
     const handleDelete = async (id: number) => {
         if (!confirm("Are you sure you want to delete this testimonial?")) return;
         try {
-            const response = await fetch(`/api/v1/testimonials/${id}`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/testimonials/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -120,7 +123,8 @@ const TestimonialsManager = () => {
         formData.append('file', file);
 
         try {
-            const response = await fetch('/api/v1/upload', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'

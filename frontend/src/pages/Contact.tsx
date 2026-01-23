@@ -92,7 +92,8 @@ const Contact = () => {
 
   const fetchServices = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/v1/services?public_view=true');
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+      const response = await fetch(`${apiBase}/api/v1/services?public_view=true`);
       if (response.ok) {
         const data = await response.json();
         setServices(data);
@@ -128,7 +129,8 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:5001/api/v1/enquiries/submit', {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+      const response = await fetch(`${apiBase}/api/v1/enquiries/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

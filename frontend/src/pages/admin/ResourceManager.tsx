@@ -151,7 +151,8 @@ const ResourceManager = () => {
             if (dateRange?.from) params.append('startDate', format(dateRange.from, 'yyyy-MM-dd'));
             if (dateRange?.to) params.append('endDate', format(dateRange.to, 'yyyy-MM-dd'));
 
-            const response = await fetch(`/api/v1/resources?${params.toString()}`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/resources?${params.toString()}`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -174,7 +175,8 @@ const ResourceManager = () => {
 
         try {
             toast.loading("Uploading to Cloudinary...");
-            const response = await fetch('/api/v1/upload', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -314,7 +316,8 @@ const ResourceManager = () => {
     };
 
     const upsertResource = async (resource: Resource) => {
-        const response = await fetch('/api/v1/resources/upsert', {
+        const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+        const response = await fetch(`${apiBase}/api/v1/resources/upsert`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(resource),
@@ -327,7 +330,8 @@ const ResourceManager = () => {
     const handleDelete = async (id: number) => {
         if (!confirm("Permanently delete this resource?")) return;
         try {
-            const response = await fetch(`/api/v1/resources/${id}`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/resources/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });

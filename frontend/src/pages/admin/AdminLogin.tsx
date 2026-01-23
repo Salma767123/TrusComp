@@ -27,7 +27,8 @@ const AdminLogin = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch("http://localhost:5001/api/v1/auth/login", {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -55,7 +56,8 @@ const AdminLogin = () => {
 
         try {
             // Check if backend is reachable first
-            await fetch("http://localhost:5001/api/v1/auth/forgot-password", {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            await fetch(`${apiBase}/api/v1/auth/forgot-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: forgotEmail }),

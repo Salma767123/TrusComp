@@ -17,7 +17,8 @@ const ServiceDetail = () => {
     useEffect(() => {
         const fetchService = async () => {
             try {
-                const response = await fetch(`/api/v1/services/${id}`);
+                const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+                const response = await fetch(`${apiBase}/api/v1/services/${id}`);
                 if (response.ok) {
                     const data = await response.json();
                     setService(data);

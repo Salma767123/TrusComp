@@ -14,7 +14,8 @@ const Testimonials = () => {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('/api/v1/testimonials?public_view=true');
+        const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+        const response = await fetch(`${apiBase}/api/v1/testimonials?public_view=true`);
         if (response.ok) {
           const data = await response.json();
           setTestimonials(data);

@@ -38,7 +38,7 @@ import {
 import {
     PieChart,
     Pie,
-    Title,
+    // Title,
     Tooltip,
     Legend,
     ResponsiveContainer,
@@ -101,7 +101,8 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:5001/api/v1/admin/dashboard/stats?filter=${timeFilter}`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/admin/dashboard/stats?filter=${timeFilter}`, {
                 credentials: 'include'
             });
             if (response.ok) {

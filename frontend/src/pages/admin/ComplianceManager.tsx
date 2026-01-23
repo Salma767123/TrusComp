@@ -74,7 +74,8 @@ const ComplianceManager = () => {
     const fetchUpdates = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/v1/compliance', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/compliance`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -95,7 +96,8 @@ const ComplianceManager = () => {
         if (!selectedUpdate) return;
         setIsSaving(true);
         try {
-            const response = await fetch('http://localhost:5001/api/v1/compliance/upsert', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/compliance/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedUpdate),
@@ -117,7 +119,8 @@ const ComplianceManager = () => {
     const handleDelete = async (id: number) => {
         if (!confirm("Remove this bulletin from the ledger?")) return;
         try {
-            const response = await fetch(`http://localhost:5001/api/v1/compliance/${id}`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/compliance/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });

@@ -49,7 +49,7 @@ app.use(express.json());
 
 // Minimal root route for Vercel deployment verification
 app.get('/', (req: Request, res: Response) => {
-    res.send('Backend is running');
+    res.json({ message: 'Backend is running', status: 'ok' });
 });
 
 // Routes

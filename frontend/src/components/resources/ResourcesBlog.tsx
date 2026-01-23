@@ -10,7 +10,8 @@ const ResourcesBlog = () => {
     useEffect(() => {
         const fetchBlogs = async () => {
             try {
-                const response = await fetch('/api/v1/blogs');
+                const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+                const response = await fetch(`${apiBase}/api/v1/blogs`);
                 if (response.ok) {
                     const data = await response.json();
                     // Sort by published_date descending (Newest First)

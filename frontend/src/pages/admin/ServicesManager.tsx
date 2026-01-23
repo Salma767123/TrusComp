@@ -128,9 +128,10 @@ const ServicesManager = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
             const [servicesRes, categoriesRes] = await Promise.all([
-                fetch('/api/v1/services', { credentials: 'include' }),
-                fetch('/api/v1/services/categories/all', { credentials: 'include' })
+                fetch(`${apiBase}/api/v1/services`, { credentials: 'include' }),
+                fetch(`${apiBase}/api/v1/services/categories/all`, { credentials: 'include' })
             ]);
 
             if (servicesRes.ok) {
@@ -180,7 +181,8 @@ const ServicesManager = () => {
                 sort_order: editingService.sort_order
             };
 
-            const response = await fetch('/api/v1/services/upsert', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/services/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -205,7 +207,8 @@ const ServicesManager = () => {
     const handleDelete = async (id: number) => {
         if (!confirm("Are you sure you want to delete this service?")) return;
         try {
-            const response = await fetch(`/api/v1/services/${id}`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/services/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -239,7 +242,8 @@ const ServicesManager = () => {
                 benefits: service.benefits || []
             };
 
-            const response = await fetch('/api/v1/services/upsert', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/services/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -258,7 +262,8 @@ const ServicesManager = () => {
     // --- Category Management ---
     const persistCategories = async (newList: string[]) => {
         try {
-            const res = await fetch('/api/v1/services/categories/update', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const res = await fetch(`${apiBase}/api/v1/services/categories/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ categories: newList }),
@@ -297,7 +302,8 @@ const ServicesManager = () => {
             return;
         }
         try {
-            const res = await fetch('/api/v1/services/category/rename', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const res = await fetch(`${apiBase}/api/v1/services/category/rename`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ oldName, newName: newName.trim() }),
@@ -425,7 +431,8 @@ const ServicesManager = () => {
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-1 transition-opacity">
                                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary transition-all" onClick={() => {
-                                                    fetch(`/api/v1/services/${service.slug}`).then(r => r.json()).then(data => {
+                                                    const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+                                                    fetch(`${apiBase}/api/v1/services/${service.slug}`).then(r => r.json()).then(data => {
                                                         setEditingService(data);
                                                         setIsDialogOpen(true);
                                                     });

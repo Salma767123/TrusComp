@@ -35,7 +35,8 @@ const MonthlyLabourLawDetail = () => {
     useEffect(() => {
         const fetchUpdate = async () => {
             try {
-                const response = await fetch(`http://localhost:5001/api/v1/labour-law-updates/${numericId}`);
+                const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+                const response = await fetch(`${apiBase}/api/v1/labour-law-updates/${numericId}`);
                 if (response.ok) {
                     const data = await response.json();
                     // Parse JSONB fields

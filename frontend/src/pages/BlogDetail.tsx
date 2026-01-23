@@ -76,7 +76,8 @@ const BlogDetail = () => {
     useEffect(() => {
         const fetchPost = async () => {
             try {
-                const response = await fetch(`/api/v1/blogs/${id}`);
+                const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+                const response = await fetch(`${apiBase}/api/v1/blogs/${id}`);
                 if (response.ok) {
                     const data = await response.json();
                     // Parse attachments if they are stringified

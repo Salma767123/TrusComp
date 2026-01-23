@@ -72,7 +72,8 @@ const SettingsManager = () => {
     const fetchSettings = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/v1/settings', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/settings`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -123,7 +124,8 @@ const SettingsManager = () => {
 
         try {
             toast.loading("Uploading...");
-            const response = await fetch('http://localhost:5001/api/v1/upload', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -149,7 +151,8 @@ const SettingsManager = () => {
         setIsSaving(true);
         setShowEmailChangeModal(false);
         try {
-            const response = await fetch('http://localhost:5001/api/v1/auth/initiate-email-change', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/auth/initiate-email-change`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ newEmail: settings.admin_account_email }),
@@ -239,7 +242,8 @@ const SettingsManager = () => {
                 return;
             }
 
-            const response = await fetch('http://localhost:5001/api/v1/settings/batch', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/settings/batch`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ settings: settingsArray }),
@@ -299,7 +303,8 @@ const SettingsManager = () => {
 
         setIsTestingEmail(true);
         try {
-            const response = await fetch('http://localhost:5001/api/v1/settings/test-email', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/settings/test-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

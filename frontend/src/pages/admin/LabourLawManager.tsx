@@ -81,7 +81,8 @@ const LabourLawManager = () => {
     const fetchUpdates = async () => {
         setLoading(true);
         try {
-            let url = '/api/v1/labour-law-updates?include_hidden=true';
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            let url = `${apiBase}/api/v1/labour-law-updates?include_hidden=true`;
             if (dateFilter) {
                 // Filter by release_date on backend
                 url += `&date=${format(dateFilter, 'yyyy-MM-dd')}`;
@@ -151,7 +152,8 @@ const LabourLawManager = () => {
 
         setIsSaving(true);
         try {
-            const response = await fetch('/api/v1/labour-law-updates/upsert', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/labour-law-updates/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedUpdate),
@@ -175,7 +177,8 @@ const LabourLawManager = () => {
     const handleDelete = async (id: number) => {
         if (!confirm("Permanently delete this update?")) return;
         try {
-            const response = await fetch(`/api/v1/labour-law-updates/${id}`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/labour-law-updates/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -193,7 +196,8 @@ const LabourLawManager = () => {
         setUpdates(prev => prev.map(u => u.id === update.id ? updatedUpdate : u));
 
         try {
-            await fetch('/api/v1/labour-law-updates/upsert', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            await fetch(`${apiBase}/api/v1/labour-law-updates/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedUpdate),
@@ -261,7 +265,8 @@ const LabourLawManager = () => {
 
         try {
             toast.loading("Uploading image...");
-            const response = await fetch('/api/v1/upload', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -297,7 +302,8 @@ const LabourLawManager = () => {
 
         try {
             toast.loading("Uploading document...");
-            const response = await fetch('/api/v1/upload', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'

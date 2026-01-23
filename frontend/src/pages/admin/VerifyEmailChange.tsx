@@ -39,7 +39,8 @@ const VerifyEmailChange = () => {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch("http://localhost:5001/api/v1/auth/verify-email-change", {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/auth/verify-email-change`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

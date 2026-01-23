@@ -125,7 +125,8 @@ const EnquiryManager = () => {
     const fetchEnquiries = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5001/api/v1/enquiries', {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/enquiries`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -141,7 +142,8 @@ const EnquiryManager = () => {
 
     const fetchServices = async () => {
         try {
-            const response = await fetch('http://localhost:5001/api/v1/services?public_view=true');
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/services?public_view=true`);
             if (response.ok) {
                 const data = await response.json();
                 setServices(data);
@@ -204,9 +206,10 @@ const EnquiryManager = () => {
         setIsSaving(true);
         try {
             const isNew = selectedEnquiry.id === 0;
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
             const url = isNew
-                ? 'http://localhost:5001/api/v1/enquiries'
-                : `http://localhost:5001/api/v1/enquiries/${selectedEnquiry.id}`;
+                ? `${apiBase}/api/v1/enquiries`
+                : `${apiBase}/api/v1/enquiries/${selectedEnquiry.id}`;
             const method = isNew ? 'POST' : 'PUT';
 
             const response = await fetch(url, {
@@ -232,7 +235,8 @@ const EnquiryManager = () => {
 
     const handleChangeStatus = async (id: number, newStatus: string) => {
         try {
-            const response = await fetch(`http://localhost:5001/api/v1/enquiries/${id}/status`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/enquiries/${id}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus }),
@@ -253,7 +257,8 @@ const EnquiryManager = () => {
     const handleDelete = async (id: number) => {
         if (!confirm("Permanently delete this record?")) return;
         try {
-            const response = await fetch(`http://localhost:5001/api/v1/enquiries/${id}`, {
+            const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+            const response = await fetch(`${apiBase}/api/v1/enquiries/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
