@@ -32,6 +32,7 @@ import ResourceManager from "./pages/admin/ResourceManager";
 import BlogManager from "./pages/admin/BlogManager";
 import TestimonialsManager from "./pages/admin/TestimonialsManager";
 import LabourLawManager from "./pages/admin/LabourLawManager";
+import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 import { useSettings } from "./hooks/useSettings";
 import { useEffect } from "react";
 
@@ -42,7 +43,7 @@ const AppContent = () => {
 
   useEffect(() => {
     if (settings?.favicon) {
-      const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+      const link = (document.querySelector("link[rel*='icon']") || document.createElement('link')) as HTMLLinkElement;
       link.type = 'image/x-icon';
       link.rel = 'shortcut icon';
       link.href = settings.favicon;
@@ -77,15 +78,17 @@ const AppContent = () => {
           <Route path="/admin/reset-password" element={<ResetPassword />} />
 
           {/* Protected Admin Routes with Layout */}
-          <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-          <Route path="/admin/seo" element={<AdminLayout><SEOManager /></AdminLayout>} />
-          <Route path="/admin/enquiries" element={<AdminLayout><EnquiryManager /></AdminLayout>} />
-          <Route path="/admin/settings" element={<AdminLayout><SettingsManager /></AdminLayout>} />
-          <Route path="/admin/services" element={<AdminLayout><ServicesManager /></AdminLayout>} />
-          <Route path="/admin/resources" element={<AdminLayout><ResourceManager /></AdminLayout>} />
-          <Route path="/admin/labour-law-updates" element={<AdminLayout><LabourLawManager /></AdminLayout>} />
-          <Route path="/admin/blogs" element={<AdminLayout><BlogManager /></AdminLayout>} />
-          <Route path="/admin/testimonials" element={<AdminLayout><TestimonialsManager /></AdminLayout>} />
+          <Route element={<ProtectedAdminRoute />}>
+            <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+            <Route path="/admin/seo" element={<AdminLayout><SEOManager /></AdminLayout>} />
+            <Route path="/admin/enquiries" element={<AdminLayout><EnquiryManager /></AdminLayout>} />
+            <Route path="/admin/settings" element={<AdminLayout><SettingsManager /></AdminLayout>} />
+            <Route path="/admin/services" element={<AdminLayout><ServicesManager /></AdminLayout>} />
+            <Route path="/admin/resources" element={<AdminLayout><ResourceManager /></AdminLayout>} />
+            <Route path="/admin/labour-law-updates" element={<AdminLayout><LabourLawManager /></AdminLayout>} />
+            <Route path="/admin/blogs" element={<AdminLayout><BlogManager /></AdminLayout>} />
+            <Route path="/admin/testimonials" element={<AdminLayout><TestimonialsManager /></AdminLayout>} />
+          </Route>
 
           <Route path="*" element={<NotFound />} />
         </Routes>

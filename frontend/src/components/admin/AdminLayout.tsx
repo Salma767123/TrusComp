@@ -101,6 +101,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
     const currentPath = location.pathname;
 
+    const handleLogout = () => {
+        localStorage.removeItem("adminToken");
+        navigate("/admin/login", { replace: true });
+    };
+
     return (
         <TooltipProvider>
             <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
@@ -158,7 +163,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                         </button>
 
                         <button
-                            onClick={() => navigate("/")}
+                            onClick={handleLogout}
                             className={cn(
                                 "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 transition-all",
                                 collapsed && "justify-center px-2"
@@ -208,7 +213,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                                     ))}
                                 </div>
                                 <div className="p-4 border-t border-slate-100">
-                                    <button className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors">
+                                    <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors">
                                         <LogOut className="w-5 h-5" />
                                         <span className="font-bold">Sign Out</span>
                                     </button>
@@ -259,7 +264,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                                             </p>
                                         </div>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem className="rounded-lg gap-3 px-3 py-2 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer" onClick={() => navigate("/")}>
+                                        <DropdownMenuItem className="rounded-lg gap-3 px-3 py-2 text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer" onClick={handleLogout}>
                                             <LogOut className="w-4 h-4" /> <span>Sign Out</span>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

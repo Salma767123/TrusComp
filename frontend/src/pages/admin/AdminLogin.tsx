@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,6 +21,13 @@ const AdminLogin = () => {
     const [isResetLoading, setIsResetLoading] = useState(false);
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem("adminToken");
+        if (token) {
+            navigate("/admin/dashboard", { replace: true });
+        }
+    }, [navigate]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
