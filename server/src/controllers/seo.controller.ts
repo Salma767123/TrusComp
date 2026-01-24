@@ -15,9 +15,13 @@ export const getSEOAdmin = async (req: AuthRequest, res: Response) => {
 
         const result = await pool.query(query, params);
         res.json(result.rows[0] || null);
-    } catch (err) {
-        console.error('Error fetching SEO (Admin):', err);
-        res.status(500).json({ message: 'Internal server error' });
+    } catch (err: any) {
+        console.error('SEO ADMIN FETCH ERROR:', err.message);
+        console.error('Params:', { page_type, page_reference_id });
+        res.status(500).json({
+            message: 'Internal server error fetching SEO',
+            error: err.message
+        });
     }
 };
 
@@ -120,9 +124,12 @@ export const getSEOPublic = async (req: Request, res: Response) => {
 
         const result = await pool.query(query, params);
         res.json(result.rows[0] || null);
-    } catch (err) {
-        console.error('Error fetching SEO (Public):', err);
-        res.status(500).json({ message: 'Internal server error' });
+    } catch (err: any) {
+        console.error('SEO PUBLIC FETCH ERROR:', err.message);
+        res.status(500).json({
+            message: 'Internal server error fetching public SEO',
+            error: err.message
+        });
     }
 };
 
@@ -207,8 +214,11 @@ export const getSEODiscovery = async (req: AuthRequest, res: Response) => {
         ];
 
         res.json(discovery);
-    } catch (err) {
-        console.error('Error in SEO discovery:', err);
-        res.status(500).json({ message: 'Internal server error' });
+    } catch (err: any) {
+        console.error('SEO DISCOVERY ERROR:', err.message);
+        res.status(500).json({
+            message: 'Internal server error doing SEO discovery',
+            error: err.message
+        });
     }
 };

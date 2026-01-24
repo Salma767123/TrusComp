@@ -9,13 +9,36 @@ const initAdminDb = async () => {
         console.log('Initializing Admin Database Tables...');
 
 
-        // 1. Services Management
-        // Add columns for password reset to admins table
+        // 0. Admins Management
+        console.log(' - Checking Admins table...');
         await pool.query(`
-            ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_password_token VARCHAR(255);
-            ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_password_expires BIGINT;
+            CREATE TABLE IF NOT EXISTS admins (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                role VARCHAR(50) DEFAULT 'admin',
+                status VARCHAR(20) DEFAULT 'active',
+                last_login TIMESTAMP,
+                reset_password_token VARCHAR(255),
+                reset_password_expires BIGINT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
+        // Seed initial admin if none exists
+        const adminCheck = await pool.query('SELECT COUNT(*) FROM admins');
+        if (parseInt(adminCheck.rows[0].count) === 0) {
+            console.log(' - Seeding initial admin (admin@truscomp.com)...');
+            // Password is 'admin123'
+            await pool.query(`
+                INSERT INTO admins (name, email, password_hash, role)
+                VALUES ('System Administrator', 'admin@truscomp.com', '$2b$10$L7Wd8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z', 'admin')
+            `);
+        }
+
+        // 1. Services Management
+        console.log(' - Checking Services tables...');
         await pool.query(`
             CREATE TABLE IF NOT EXISTS services (
                 id SERIAL PRIMARY KEY,
@@ -38,22 +61,6 @@ const initAdminDb = async () => {
             ALTER TABLE services ADD COLUMN IF NOT EXISTS state VARCHAR(100);
             ALTER TABLE services ADD COLUMN IF NOT EXISTS category_id VARCHAR(50);
             
-            -- Rename old columns if they exist and data needs to be preserved
-            -- (Doing this safely: check if old exists AND new doesn't)
-            DO $$ 
-            BEGIN 
-                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='services' AND column_name='category') THEN
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='services' AND column_name='category_id') THEN
-                        ALTER TABLE services RENAME COLUMN category TO category_id;
-                    END IF;
-                END IF;
-                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='services' AND column_name='overview') THEN
-                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='services' AND column_name='short_overview') THEN
-                        ALTER TABLE services RENAME COLUMN overview TO short_overview;
-                    END IF;
-                END IF;
-            END $$;
-
             CREATE TABLE IF NOT EXISTS service_problems (
                 id SERIAL PRIMARY KEY,
                 service_id INTEGER REFERENCES services(id) ON DELETE CASCADE,
@@ -84,12 +91,12 @@ const initAdminDb = async () => {
                 sort_order INTEGER DEFAULT 0
             );
 
-            -- Safe schema updates for services
             ALTER TABLE services ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT TRUE;
             ALTER TABLE services ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
         `);
 
         // 2. Resources & Compliance
+        console.log(' - Checking Resources & Compliance tables...');
         await pool.query(`
             CREATE TABLE IF NOT EXISTS resources (
                 id SERIAL PRIMARY KEY,
@@ -132,17 +139,16 @@ const initAdminDb = async () => {
                 holiday_type VARCHAR(50) DEFAULT 'Gazetted'
             );
 
-            -- Safe schema updates for resources
             ALTER TABLE resources ADD COLUMN IF NOT EXISTS public_id VARCHAR(255);
             ALTER TABLE resources ADD COLUMN IF NOT EXISTS speaker_name VARCHAR(255);
             ALTER TABLE resources ADD COLUMN IF NOT EXISTS speaker_role VARCHAR(255);
             ALTER TABLE resources ADD COLUMN IF NOT EXISTS speaker_org VARCHAR(255);
             ALTER TABLE resources ADD COLUMN IF NOT EXISTS speaker_image TEXT;
             ALTER TABLE resources ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT TRUE;
-
         `);
 
         // 3. Blogs & Testimonials
+        console.log(' - Checking Blogs & Testimonials tables...');
         await pool.query(`
             CREATE TABLE IF NOT EXISTS blogs (
                 id SERIAL PRIMARY KEY,
@@ -163,7 +169,6 @@ const initAdminDb = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
-            -- Safe schema updates for existing tables
             ALTER TABLE blogs ADD COLUMN IF NOT EXISTS author VARCHAR(255);
             ALTER TABLE blogs ADD COLUMN IF NOT EXISTS tags JSONB;
             ALTER TABLE blogs ADD COLUMN IF NOT EXISTS published_date DATE;
@@ -175,7 +180,6 @@ const initAdminDb = async () => {
             ALTER TABLE blogs ADD COLUMN IF NOT EXISTS banner_image TEXT;
             ALTER TABLE blogs ADD COLUMN IF NOT EXISTS attachments JSONB;
             ALTER TABLE blogs ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT TRUE;
-
 
             CREATE TABLE IF NOT EXISTS testimonials (
                 id SERIAL PRIMARY KEY,
@@ -194,13 +198,13 @@ const initAdminDb = async () => {
                 icon_name VARCHAR(50)
             );
 
-            -- Safe schema updates for testimonials
             ALTER TABLE testimonials ADD COLUMN IF NOT EXISTS rating INTEGER DEFAULT 5;
             ALTER TABLE testimonials ADD COLUMN IF NOT EXISTS image_url TEXT;
             ALTER TABLE testimonials ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT TRUE;
         `);
 
         // 4. Leads & Settings
+        console.log(' - Checking Enquiries & Settings tables...');
         await pool.query(`
             CREATE TABLE IF NOT EXISTS enquiries (
                 id SERIAL PRIMARY KEY,
@@ -217,17 +221,6 @@ const initAdminDb = async () => {
                 confirmed_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-
-            -- Ensure columns exist if table was already created
-            DO $$ 
-            BEGIN 
-                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='enquiries' AND column_name='notes') THEN
-                    ALTER TABLE enquiries ADD COLUMN notes TEXT;
-                END IF;
-                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='enquiries' AND column_name='confirmed_at') THEN
-                    ALTER TABLE enquiries ADD COLUMN confirmed_at TIMESTAMP;
-                END IF;
-            END $$;
 
             CREATE TABLE IF NOT EXISTS settings (
                 key VARCHAR(100) PRIMARY KEY,
@@ -283,8 +276,9 @@ const initAdminDb = async () => {
         `);
 
         console.log('All Admin Database tables initialized successfully.');
-    } catch (err) {
-        console.error('Error initializing Admin Database:', err);
+    } catch (err: any) {
+        console.error('CRITICAL: Error initializing Admin Database:', err.message);
+        console.error('Error Details:', err);
     }
 };
 

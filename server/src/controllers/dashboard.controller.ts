@@ -122,8 +122,12 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
             recentEnquiries: recentEnquiriesRes.rows
         });
 
-    } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
-        res.status(500).json({ message: 'Internal server error' });
+    } catch (err: any) {
+        console.error('DASHBOARD ERROR:', err.message);
+        console.error('Stack:', err.stack);
+        res.status(500).json({
+            message: 'Internal server error fetching stats',
+            error: err.message
+        });
     }
 };
