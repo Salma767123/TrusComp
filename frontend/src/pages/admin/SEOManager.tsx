@@ -188,7 +188,7 @@ const SEOManager = () => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
             const page_type = activeItem.type === 'static' ? activeItem.id : activeItem.type;
-            const response = await authenticatedFetch(`${apiBase}/seo/upsert`, {
+            const response = await authenticatedFetch(`${apiBase}/seo`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
