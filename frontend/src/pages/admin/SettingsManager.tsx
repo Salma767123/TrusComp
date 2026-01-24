@@ -43,6 +43,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { authenticatedFetch } from "@/lib/utils";
 
 const SettingsManager = () => {
     // Tab State
@@ -73,8 +74,8 @@ const SettingsManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/settings`, {
-                credentials: 'include'
+            const response = await authenticatedFetch(`${apiBase}/settings`, {
+                // credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
@@ -125,10 +126,10 @@ const SettingsManager = () => {
         try {
             toast.loading("Uploading...");
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/upload`, {
+            const response = await authenticatedFetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -152,11 +153,11 @@ const SettingsManager = () => {
         setShowEmailChangeModal(false);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/auth/initiate-email-change`, {
+            const response = await authenticatedFetch(`${apiBase}/auth/initiate-email-change`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ newEmail: settings.admin_account_email }),
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             const data = await response.json();
@@ -243,11 +244,11 @@ const SettingsManager = () => {
             }
 
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/settings/batch`, {
+            const response = await authenticatedFetch(`${apiBase}/settings/batch`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ settings: settingsArray }),
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -304,7 +305,7 @@ const SettingsManager = () => {
         setIsTestingEmail(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/settings/test-email`, {
+            const response = await authenticatedFetch(`${apiBase}/settings/test-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -312,7 +313,7 @@ const SettingsManager = () => {
                     testRecipient: testEmailRecipient,
                     testMessage: testEmailMessage
                 }),
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             const data = await response.json();

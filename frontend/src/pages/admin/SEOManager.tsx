@@ -25,6 +25,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { authenticatedFetch } from "@/lib/utils";
 
 interface DiscoveryItem {
     id: string;
@@ -60,8 +61,8 @@ const SEOManager = () => {
     const fetchDiscovery = async () => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/seo/discovery`, {
-                credentials: 'include'
+            const response = await authenticatedFetch(`${apiBase}/seo/discovery`, {
+                // credentials: 'include'
             });
             const data = await response.json();
 
@@ -104,8 +105,8 @@ const SEOManager = () => {
                 url.searchParams.append('page_reference_id', item.reference_id);
             }
 
-            const response = await fetch(url.toString(), {
-                credentials: 'include'
+            const response = await authenticatedFetch(url.toString(), {
+                // credentials: 'include'
             });
             const data = await response.json();
 
@@ -187,12 +188,11 @@ const SEOManager = () => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
             const page_type = activeItem.type === 'static' ? activeItem.id : activeItem.type;
-            const response = await fetch(`${apiBase}/seo`, {
+            const response = await authenticatedFetch(`${apiBase}/seo/upsert`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                credentials: 'include',
                 body: JSON.stringify({
                     ...seoData,
                     page_type,

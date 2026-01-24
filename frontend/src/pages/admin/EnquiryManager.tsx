@@ -47,6 +47,7 @@ import {
     validateService,
     validateMessage
 } from "@/lib/validation";
+import { authenticatedFetch } from "@/lib/utils";
 
 interface Enquiry {
     id: number;
@@ -126,8 +127,8 @@ const EnquiryManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/enquiries`, {
-                credentials: 'include'
+            const response = await authenticatedFetch(`${apiBase}/enquiries`, {
+                // credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
@@ -143,7 +144,10 @@ const EnquiryManager = () => {
     const fetchServices = async () => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/services?public_view=true`);
+            // Public view, so we can keep using fetch? Or just use authenticatedFetch?
+            // User requested "Ensure EVERY admin API call includes Authorization".
+            // Fetching services for dropdown in admin panel should probably be authenticated or at least it doesn't hurt.
+            const response = await authenticatedFetch(`${apiBase}/services?public_view=true`);
             if (response.ok) {
                 const data = await response.json();
                 setServices(data);
@@ -212,11 +216,11 @@ const EnquiryManager = () => {
                 : `${apiBase}/enquiries/${selectedEnquiry.id}`;
             const method = isNew ? 'POST' : 'PUT';
 
-            const response = await fetch(url, {
+            const response = await authenticatedFetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedEnquiry),
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -236,11 +240,11 @@ const EnquiryManager = () => {
     const handleChangeStatus = async (id: number, newStatus: string) => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/enquiries/${id}/status`, {
+            const response = await authenticatedFetch(`${apiBase}/enquiries/${id}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus }),
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -258,9 +262,9 @@ const EnquiryManager = () => {
         if (!confirm("Permanently delete this record?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/enquiries/${id}`, {
+            const response = await authenticatedFetch(`${apiBase}/enquiries/${id}`, {
                 method: 'DELETE',
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Enquiry deleted");

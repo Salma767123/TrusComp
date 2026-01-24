@@ -44,6 +44,7 @@ import {
     ResponsiveContainer,
     Cell
 } from 'recharts';
+import { authenticatedFetch } from "@/lib/utils";
 
 interface DashboardStats {
     metrics: {
@@ -102,8 +103,8 @@ const AdminDashboard = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/admin/dashboard/stats?filter=${timeFilter}`, {
-                credentials: 'include'
+            const response = await authenticatedFetch(`${apiBase}/admin/dashboard/stats?filter=${timeFilter}`, {
+                // credentials: 'include' // Handled by helper
             });
             if (response.ok) {
                 const data = await response.json();

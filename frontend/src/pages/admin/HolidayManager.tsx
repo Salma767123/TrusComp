@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import SplitView from "@/components/admin/SplitView";
+import { authenticatedFetch } from "@/lib/utils";
 
 interface Holiday {
     id: number;
@@ -55,8 +56,8 @@ const HolidayManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/holidays`, {
-                credentials: 'include'
+            const response = await authenticatedFetch(`${apiBase}/holidays`, {
+                // credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
@@ -77,11 +78,11 @@ const HolidayManager = () => {
         setIsSaving(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/holidays/upsert`, {
+            const response = await authenticatedFetch(`${apiBase}/holidays/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedHoliday),
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Calendar entry committed");
@@ -100,9 +101,9 @@ const HolidayManager = () => {
         if (!confirm("Expunge this event from the master calendar?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/holidays/${id}`, {
+            const response = await authenticatedFetch(`${apiBase}/holidays/${id}`, {
                 method: 'DELETE',
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Event retracted");

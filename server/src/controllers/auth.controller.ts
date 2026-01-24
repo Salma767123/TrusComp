@@ -43,7 +43,8 @@ export const login = async (req: Request, res: Response) => {
 
         res.json({
             message: 'Login successful',
-            user: { id: admin.id, name: admin.name, email: admin.email, role: admin.role }
+            user: { id: admin.id, name: admin.name, email: admin.email, role: admin.role },
+            accessToken // Explicitly return token for header-based auth
         });
 
     } catch (err: any) {

@@ -38,6 +38,7 @@ const AdminLogin = () => {
             const data = await response.json();
 
             if (response.ok) {
+                localStorage.setItem("adminToken", data.accessToken);
                 toast.success("Login successful! Redirecting...");
                 setTimeout(() => navigate("/admin/dashboard"), 1500);
             } else {

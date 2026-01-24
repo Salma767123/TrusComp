@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import SplitView from "@/components/admin/SplitView";
-import { cn } from "@/lib/utils";
+import { cn, authenticatedFetch } from "@/lib/utils";
 
 interface Testimonial {
     id: number;
@@ -52,7 +52,8 @@ const TestimonialsManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/testimonials`, { credentials: 'include' });
+            const response = await authenticatedFetch(`${apiBase}/testimonials`, { // credentials: 'include' 
+            });
             if (response.ok) {
                 const data = await response.json();
                 setTestimonials(data);
@@ -74,11 +75,11 @@ const TestimonialsManager = () => {
         setIsSaving(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/testimonials/upsert`, {
+            const response = await authenticatedFetch(`${apiBase}/testimonials/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedItem),
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Testimonial saved successfully");
@@ -100,9 +101,9 @@ const TestimonialsManager = () => {
         if (!confirm("Are you sure you want to delete this testimonial?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/testimonials/${id}`, {
+            const response = await authenticatedFetch(`${apiBase}/testimonials/${id}`, {
                 method: 'DELETE',
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Testimonial deleted");
@@ -124,10 +125,10 @@ const TestimonialsManager = () => {
 
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/upload`, {
+            const response = await authenticatedFetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {

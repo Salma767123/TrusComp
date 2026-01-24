@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import SplitView from "@/components/admin/SplitView";
+import { authenticatedFetch } from "@/lib/utils";
 import {
     Tabs,
     TabsContent,
@@ -75,8 +76,8 @@ const ComplianceManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/compliance`, {
-                credentials: 'include'
+            const response = await authenticatedFetch(`${apiBase}/compliance`, {
+                // credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
@@ -97,11 +98,11 @@ const ComplianceManager = () => {
         setIsSaving(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/compliance/upsert`, {
+            const response = await authenticatedFetch(`${apiBase}/compliance/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedUpdate),
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Broadcast synced successfully");
@@ -120,9 +121,9 @@ const ComplianceManager = () => {
         if (!confirm("Remove this bulletin from the ledger?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/compliance/${id}`, {
+            const response = await authenticatedFetch(`${apiBase}/compliance/${id}`, {
                 method: 'DELETE',
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Update purged");

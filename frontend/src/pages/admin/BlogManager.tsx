@@ -43,6 +43,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useNavigation, CaptionProps } from "react-day-picker";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { authenticatedFetch } from "@/lib/utils";
 
 // Editor configuration
 const editorModules = {
@@ -110,8 +111,8 @@ const BlogManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/blogs?include_hidden=true`, {
-                credentials: 'include'
+            const response = await authenticatedFetch(`${apiBase}/blogs?include_hidden=true`, {
+                // credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
@@ -210,11 +211,11 @@ const BlogManager = () => {
         setIsSaving(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/blogs/upsert`, {
+            const response = await authenticatedFetch(`${apiBase}/blogs/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedBlog),
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -238,9 +239,9 @@ const BlogManager = () => {
         if (!confirm("Permanently delete this blog?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/blogs/${id}`, {
+            const response = await authenticatedFetch(`${apiBase}/blogs/${id}`, {
                 method: 'DELETE',
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Blog deleted");
@@ -257,11 +258,11 @@ const BlogManager = () => {
 
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            await fetch(`${apiBase}/blogs/upsert`, {
+            await authenticatedFetch(`${apiBase}/blogs/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedBlog),
-                credentials: 'include'
+                // credentials: 'include'
             });
         } catch (err) {
             setBlogs(prev => prev.map(b => b.id === blog.id ? blog : b));
@@ -280,10 +281,10 @@ const BlogManager = () => {
         try {
             toast.loading("Uploading banner...");
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/upload`, {
+            const response = await authenticatedFetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -319,10 +320,10 @@ const BlogManager = () => {
                 const formData = new FormData();
                 formData.append('file', files[i]);
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-                const response = await fetch(`${apiBase}/upload`, {
+                const response = await authenticatedFetch(`${apiBase}/upload`, {
                     method: 'POST',
                     body: formData,
-                    credentials: 'include'
+                    // credentials: 'include'
                 });
                 if (response.ok) {
                     const data = await response.json();

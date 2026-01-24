@@ -46,6 +46,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { DateRange, useNavigation, CaptionProps } from "react-day-picker";
+import { authenticatedFetch } from "@/lib/utils";
 
 interface Resource {
     id: number;
@@ -152,8 +153,8 @@ const ResourceManager = () => {
             if (dateRange?.to) params.append('endDate', format(dateRange.to, 'yyyy-MM-dd'));
 
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/resources?${params.toString()}`, {
-                credentials: 'include'
+            const response = await authenticatedFetch(`${apiBase}/resources?${params.toString()}`, {
+                // credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
@@ -176,10 +177,10 @@ const ResourceManager = () => {
         try {
             toast.loading("Uploading to Cloudinary...");
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/upload`, {
+            const response = await authenticatedFetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -317,11 +318,11 @@ const ResourceManager = () => {
 
     const upsertResource = async (resource: Resource) => {
         const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-        const response = await fetch(`${apiBase}/resources/upsert`, {
+        const response = await authenticatedFetch(`${apiBase}/resources/upsert`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(resource),
-            credentials: 'include'
+            // credentials: 'include'
         });
         if (!response.ok) throw new Error("Failed");
         return response.json();
@@ -331,9 +332,9 @@ const ResourceManager = () => {
         if (!confirm("Permanently delete this resource?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/resources/${id}`, {
+            const response = await authenticatedFetch(`${apiBase}/resources/${id}`, {
                 method: 'DELETE',
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Resource deleted");

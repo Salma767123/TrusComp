@@ -36,6 +36,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { authenticatedFetch } from "@/lib/utils";
 
 interface LabourLawUpdate {
     id: number;
@@ -88,8 +89,8 @@ const LabourLawManager = () => {
                 url += `&date=${format(dateFilter, 'yyyy-MM-dd')}`;
             }
 
-            const response = await fetch(url, {
-                credentials: 'include'
+            const response = await authenticatedFetch(url, {
+                // credentials: 'include'
             });
             if (response.ok) {
                 const data = await response.json();
@@ -153,11 +154,11 @@ const LabourLawManager = () => {
         setIsSaving(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/labour-law-updates/upsert`, {
+            const response = await authenticatedFetch(`${apiBase}/labour-law-updates/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedUpdate),
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -178,9 +179,9 @@ const LabourLawManager = () => {
         if (!confirm("Permanently delete this update?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/labour-law-updates/${id}`, {
+            const response = await authenticatedFetch(`${apiBase}/labour-law-updates/${id}`, {
                 method: 'DELETE',
-                credentials: 'include'
+                // credentials: 'include'
             });
             if (response.ok) {
                 toast.success("Update deleted");
@@ -197,11 +198,11 @@ const LabourLawManager = () => {
 
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            await fetch(`${apiBase}/labour-law-updates/upsert`, {
+            await authenticatedFetch(`${apiBase}/labour-law-updates/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedUpdate),
-                credentials: 'include'
+                // credentials: 'include'
             });
         } catch (err) {
             setUpdates(prev => prev.map(u => u.id === update.id ? update : u));
@@ -266,10 +267,10 @@ const LabourLawManager = () => {
         try {
             toast.loading("Uploading image...");
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/upload`, {
+            const response = await authenticatedFetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
@@ -303,10 +304,10 @@ const LabourLawManager = () => {
         try {
             toast.loading("Uploading document...");
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/upload`, {
+            const response = await authenticatedFetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
-                credentials: 'include'
+                // credentials: 'include'
             });
 
             if (response.ok) {
