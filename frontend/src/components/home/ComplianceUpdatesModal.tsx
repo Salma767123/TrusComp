@@ -98,9 +98,9 @@ const ComplianceUpdatesModal = ({ open, onOpenChange }: ComplianceUpdatesModalPr
             try {
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
                 const [resResponse, lawResponse, blogResponse] = await Promise.all([
-                    fetch(`${apiBase}/api/v1/resources`),
-                    fetch(`${apiBase}/api/v1/labour-law-updates`),
-                    fetch(`${apiBase}/api/v1/blogs`)
+                    fetch(`${apiBase}/resources`),
+                    fetch(`${apiBase}/labour-law-updates`),
+                    fetch(`${apiBase}/blogs`)
                 ]);
 
                 let unified: UnifiedUpdate[] = [];

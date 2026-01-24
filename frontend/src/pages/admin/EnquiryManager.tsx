@@ -126,7 +126,7 @@ const EnquiryManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/enquiries`, {
+            const response = await fetch(`${apiBase}/enquiries`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -143,7 +143,7 @@ const EnquiryManager = () => {
     const fetchServices = async () => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/services?public_view=true`);
+            const response = await fetch(`${apiBase}/services?public_view=true`);
             if (response.ok) {
                 const data = await response.json();
                 setServices(data);
@@ -208,8 +208,8 @@ const EnquiryManager = () => {
             const isNew = selectedEnquiry.id === 0;
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
             const url = isNew
-                ? `${apiBase}/api/v1/enquiries`
-                : `${apiBase}/api/v1/enquiries/${selectedEnquiry.id}`;
+                ? `${apiBase}/enquiries`
+                : `${apiBase}/enquiries/${selectedEnquiry.id}`;
             const method = isNew ? 'POST' : 'PUT';
 
             const response = await fetch(url, {
@@ -236,7 +236,7 @@ const EnquiryManager = () => {
     const handleChangeStatus = async (id: number, newStatus: string) => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/enquiries/${id}/status`, {
+            const response = await fetch(`${apiBase}/enquiries/${id}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus }),
@@ -258,7 +258,7 @@ const EnquiryManager = () => {
         if (!confirm("Permanently delete this record?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/enquiries/${id}`, {
+            const response = await fetch(`${apiBase}/enquiries/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });

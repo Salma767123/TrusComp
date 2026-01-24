@@ -73,7 +73,7 @@ const SettingsManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/settings`, {
+            const response = await fetch(`${apiBase}/settings`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -125,7 +125,7 @@ const SettingsManager = () => {
         try {
             toast.loading("Uploading...");
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/upload`, {
+            const response = await fetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -152,7 +152,7 @@ const SettingsManager = () => {
         setShowEmailChangeModal(false);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/auth/initiate-email-change`, {
+            const response = await fetch(`${apiBase}/auth/initiate-email-change`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ newEmail: settings.admin_account_email }),
@@ -243,7 +243,7 @@ const SettingsManager = () => {
             }
 
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/settings/batch`, {
+            const response = await fetch(`${apiBase}/settings/batch`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ settings: settingsArray }),
@@ -304,7 +304,7 @@ const SettingsManager = () => {
         setIsTestingEmail(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/settings/test-email`, {
+            const response = await fetch(`${apiBase}/settings/test-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

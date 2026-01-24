@@ -40,7 +40,7 @@ const VerifyEmailChange = () => {
 
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/auth/verify-email-change`, {
+            const response = await fetch(`${apiBase}/auth/verify-email-change`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

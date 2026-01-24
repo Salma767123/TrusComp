@@ -52,7 +52,7 @@ const TestimonialsManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/testimonials`, { credentials: 'include' });
+            const response = await fetch(`${apiBase}/testimonials`, { credentials: 'include' });
             if (response.ok) {
                 const data = await response.json();
                 setTestimonials(data);
@@ -74,7 +74,7 @@ const TestimonialsManager = () => {
         setIsSaving(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/testimonials/upsert`, {
+            const response = await fetch(`${apiBase}/testimonials/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedItem),
@@ -100,7 +100,7 @@ const TestimonialsManager = () => {
         if (!confirm("Are you sure you want to delete this testimonial?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/testimonials/${id}`, {
+            const response = await fetch(`${apiBase}/testimonials/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -124,7 +124,7 @@ const TestimonialsManager = () => {
 
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/upload`, {
+            const response = await fetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'

@@ -16,10 +16,10 @@ const ResourcesLayout = () => {
             try {
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
                 // Fetch regular resources
-                const resourcesResponse = await fetch(`${apiBase}/api/v1/resources`);
+                const resourcesResponse = await fetch(`${apiBase}/resources`);
 
                 // Fetch labour law updates
-                const labourLawResponse = await fetch(`${apiBase}/api/v1/labour-law-updates`);
+                const labourLawResponse = await fetch(`${apiBase}/labour-law-updates`);
 
                 let allResources: ResourceItem[] = [];
 

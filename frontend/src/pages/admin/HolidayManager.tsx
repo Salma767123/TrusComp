@@ -55,7 +55,7 @@ const HolidayManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/holidays`, {
+            const response = await fetch(`${apiBase}/holidays`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -77,7 +77,7 @@ const HolidayManager = () => {
         setIsSaving(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/holidays/upsert`, {
+            const response = await fetch(`${apiBase}/holidays/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedHoliday),
@@ -100,7 +100,7 @@ const HolidayManager = () => {
         if (!confirm("Expunge this event from the master calendar?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/holidays/${id}`, {
+            const response = await fetch(`${apiBase}/holidays/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });

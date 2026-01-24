@@ -102,7 +102,7 @@ const AdminDashboard = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/admin/dashboard/stats?filter=${timeFilter}`, {
+            const response = await fetch(`${apiBase}/admin/dashboard/stats?filter=${timeFilter}`, {
                 credentials: 'include'
             });
             if (response.ok) {

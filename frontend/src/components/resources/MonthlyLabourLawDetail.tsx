@@ -36,7 +36,7 @@ const MonthlyLabourLawDetail = () => {
         const fetchUpdate = async () => {
             try {
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-                const response = await fetch(`${apiBase}/api/v1/labour-law-updates/${numericId}`);
+                const response = await fetch(`${apiBase}/labour-law-updates/${numericId}`);
                 if (response.ok) {
                     const data = await response.json();
                     // Parse JSONB fields

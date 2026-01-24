@@ -28,7 +28,7 @@ const AdminLogin = () => {
 
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/auth/login`, {
+            const response = await fetch(`${apiBase}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -57,7 +57,7 @@ const AdminLogin = () => {
         try {
             // Check if backend is reachable first
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            await fetch(`${apiBase}/api/v1/auth/forgot-password`, {
+            await fetch(`${apiBase}/auth/forgot-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: forgotEmail }),

@@ -60,7 +60,7 @@ const SEOManager = () => {
     const fetchDiscovery = async () => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/seo/discovery`, {
+            const response = await fetch(`${apiBase}/seo/discovery`, {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -95,7 +95,7 @@ const SEOManager = () => {
         setIsFetching(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const url = new URL(`${apiBase}/api/v1/seo`);
+            const url = new URL(`${apiBase}/seo`);
 
             const pageType = item.type === 'static' ? item.id : item.type;
             url.searchParams.append('page_type', pageType || '');
@@ -187,7 +187,7 @@ const SEOManager = () => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
             const page_type = activeItem.type === 'static' ? activeItem.id : activeItem.type;
-            const response = await fetch(`${apiBase}/api/v1/seo`, {
+            const response = await fetch(`${apiBase}/seo`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -35,7 +35,11 @@ const loginLimiter = rateLimit({
 
 // Middleware
 const corsOptions = {
-    origin: 'https://truscomp-frontend.vercel.app',
+    origin: [
+        'https://truscomp-frontend.vercel.app',
+        'http://localhost:8080',
+        'http://localhost:3000'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -84,6 +88,30 @@ app.get('/health', async (req: Request, res: Response) => {
         res.status(500).json({
             status: 'error',
             message: 'Database connection failed'
+        });
+    }
+});
+
+// Detailed Database Health Check
+app.get('/api/health/db', async (req: Request, res: Response) => {
+    try {
+        const result = await pool.query('SELECT NOW() as time, current_database() as db');
+        res.json({
+            status: 'ok',
+            database: result.rows[0].db,
+            serverTime: result.rows[0].time,
+            poolConfig: {
+                max: 5,
+                idleTimeoutMillis: 30000,
+                connectionTimeoutMillis: 10000
+            }
+        });
+    } catch (err: any) {
+        console.error('DB Health Check Failed:', err.message);
+        res.status(500).json({
+            status: 'error',
+            message: 'Database connection failed',
+            error: err.message
         });
     }
 });

@@ -110,7 +110,7 @@ const BlogManager = () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/blogs?include_hidden=true`, {
+            const response = await fetch(`${apiBase}/blogs?include_hidden=true`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -210,7 +210,7 @@ const BlogManager = () => {
         setIsSaving(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/blogs/upsert`, {
+            const response = await fetch(`${apiBase}/blogs/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(selectedBlog),
@@ -238,7 +238,7 @@ const BlogManager = () => {
         if (!confirm("Permanently delete this blog?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/blogs/${id}`, {
+            const response = await fetch(`${apiBase}/blogs/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -257,7 +257,7 @@ const BlogManager = () => {
 
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            await fetch(`${apiBase}/api/v1/blogs/upsert`, {
+            await fetch(`${apiBase}/blogs/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedBlog),
@@ -280,7 +280,7 @@ const BlogManager = () => {
         try {
             toast.loading("Uploading banner...");
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/upload`, {
+            const response = await fetch(`${apiBase}/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
@@ -319,7 +319,7 @@ const BlogManager = () => {
                 const formData = new FormData();
                 formData.append('file', files[i]);
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-                const response = await fetch(`${apiBase}/api/v1/upload`, {
+                const response = await fetch(`${apiBase}/upload`, {
                     method: 'POST',
                     body: formData,
                     credentials: 'include'

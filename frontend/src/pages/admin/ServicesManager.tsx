@@ -130,8 +130,8 @@ const ServicesManager = () => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
             const [servicesRes, categoriesRes] = await Promise.all([
-                fetch(`${apiBase}/api/v1/services`, { credentials: 'include' }),
-                fetch(`${apiBase}/api/v1/services/categories/all`, { credentials: 'include' })
+                fetch(`${apiBase}/services`, { credentials: 'include' }),
+                fetch(`${apiBase}/services/categories/all`, { credentials: 'include' })
             ]);
 
             if (servicesRes.ok) {
@@ -182,7 +182,7 @@ const ServicesManager = () => {
             };
 
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/services/upsert`, {
+            const response = await fetch(`${apiBase}/services/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -208,7 +208,7 @@ const ServicesManager = () => {
         if (!confirm("Are you sure you want to delete this service?")) return;
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/services/${id}`, {
+            const response = await fetch(`${apiBase}/services/${id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -243,7 +243,7 @@ const ServicesManager = () => {
             };
 
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await fetch(`${apiBase}/api/v1/services/upsert`, {
+            const response = await fetch(`${apiBase}/services/upsert`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -263,7 +263,7 @@ const ServicesManager = () => {
     const persistCategories = async (newList: string[]) => {
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const res = await fetch(`${apiBase}/api/v1/services/categories/update`, {
+            const res = await fetch(`${apiBase}/services/categories/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ categories: newList }),
@@ -303,7 +303,7 @@ const ServicesManager = () => {
         }
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const res = await fetch(`${apiBase}/api/v1/services/category/rename`, {
+            const res = await fetch(`${apiBase}/services/category/rename`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ oldName, newName: newName.trim() }),
@@ -432,7 +432,7 @@ const ServicesManager = () => {
                                             <div className="flex items-center justify-end gap-1 transition-opacity">
                                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary transition-all" onClick={() => {
                                                     const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-                                                    fetch(`${apiBase}/api/v1/services/${service.slug}`).then(r => r.json()).then(data => {
+                                                    fetch(`${apiBase}/services/${service.slug}`).then(r => r.json()).then(data => {
                                                         setEditingService(data);
                                                         setIsDialogOpen(true);
                                                     });

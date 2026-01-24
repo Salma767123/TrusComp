@@ -38,7 +38,7 @@ export const useSEO = (pageType: string, referenceId?: string) => {
             try {
                 // Use relative URL to leverage Vite proxy
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-                const url = new URL(`${apiBase}/api/v1/seo/public`, window.location.origin);
+                const url = new URL(`${apiBase}/seo/public`, window.location.origin);
                 url.searchParams.append('page_type', pageType);
                 if (referenceId) {
                     url.searchParams.append('page_reference_id', referenceId);

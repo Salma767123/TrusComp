@@ -16,7 +16,7 @@ const Services = () => {
     const fetchServices = async () => {
       try {
         const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-        const response = await fetch(`${apiBase}/api/v1/services?public_view=true`);
+        const response = await fetch(`${apiBase}/services?public_view=true`);
         if (response.ok) {
           const data = await response.json();
           setServices(data);
