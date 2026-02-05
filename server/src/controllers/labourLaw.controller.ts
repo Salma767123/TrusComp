@@ -5,29 +5,75 @@ import pool from '../config/db';
 // Get all updates (public/admin)
 export const getAllUpdates = async (req: Request, res: Response) => {
     try {
-        const { include_hidden, startDate, endDate } = req.query;
+        const { include_hidden, startDate, endDate, page = 1, limit = 7, searchTerm, status } = req.query;
+        const offset = (Number(page) - 1) * Number(limit);
+
+        console.log('[LabourLaw] Filter params:', { status, searchTerm, startDate, endDate, page, limit });
+
         let query = 'SELECT * FROM labour_law_updates WHERE 1=1';
+        let countQuery = 'SELECT COUNT(*) FROM labour_law_updates WHERE 1=1';
         const params: any[] = [];
         let paramIndex = 1;
 
-        if (include_hidden !== 'true') {
-            query += ` AND is_visible = true`;
+        // Handle Status Filter (highest priority for visibility)
+        if (status === 'active') {
+            const condition = ` AND is_visible = true`;
+            query += condition;
+            countQuery += condition;
+        } else if (status === 'inactive') {
+            const condition = ` AND is_visible = false`;
+            query += condition;
+            countQuery += condition;
+        } else if (status === 'all') {
+            // Show all (both visible and hidden)
+        } else {
+            // Legacy behavior/Public view: only show visible if include_hidden isn't explicitly true
+            if (include_hidden !== 'true') {
+                const condition = ` AND is_visible = true`;
+                query += condition;
+                countQuery += condition;
+            }
         }
 
         if (startDate) {
-            query += ` AND release_date >= $${paramIndex++}`;
+            const condition = ` AND release_date >= $${paramIndex++}`;
+            query += condition;
+            countQuery += condition;
             params.push(startDate);
         }
 
         if (endDate) {
-            query += ` AND release_date <= $${paramIndex++}`;
+            const condition = ` AND release_date <= $${paramIndex++}`;
+            query += condition;
+            countQuery += condition;
             params.push(endDate);
         }
 
-        query += ' ORDER BY release_date DESC';
+        if (searchTerm) {
+            const condition = ` AND title ILIKE $${paramIndex++}`;
+            query += condition;
+            countQuery += condition;
+            params.push(`%${searchTerm}%`);
+        }
+
+        // Get total count
+        const countResult = await pool.query(countQuery, params);
+        const totalCount = parseInt(countResult.rows[0].count);
+
+        // Add sorting and pagination
+        query += ` ORDER BY release_date DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+        params.push(limit, offset);
 
         const result = await pool.query(query, params);
-        res.json(result.rows);
+        res.json({
+            data: result.rows,
+            pagination: {
+                total: totalCount,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(totalCount / Number(limit))
+            }
+        });
     } catch (err) {
         console.error('Error fetching labour law updates:', err);
         res.status(500).json({ message: 'Internal server error' });
@@ -66,11 +112,12 @@ export const upsertUpdate = async (req: Request, res: Response) => {
             speaker_role,
             speaker_org,
             speaker_image,
+            webinar_link,
             documents,
             videos
         } = req.body;
 
-        console.log('[LabourLaw] Upsert request:', { id, title, has_documents: !!documents, has_videos: !!videos });
+        console.log('[LabourLaw] Upsert request:', { id, title, has_documents: !!documents, has_videos: !!videos, has_webinar: !!webinar_link });
 
         // Validate required fields
         if (!title || !release_date) {
@@ -87,6 +134,7 @@ export const upsertUpdate = async (req: Request, res: Response) => {
         const safeSpeakerRole = speaker_role || null;
         const safeSpeakerOrg = speaker_org || null;
         const safeSpeakerImage = speaker_image || null;
+        const safeWebinarLink = webinar_link ? webinar_link.trim() : null;
 
         // Ensure documents and videos are arrays
         const safeDocuments = Array.isArray(documents) ? documents : [];
@@ -107,10 +155,11 @@ export const upsertUpdate = async (req: Request, res: Response) => {
                     speaker_role = $7,
                     speaker_org = $8,
                     speaker_image = $9,
-                    documents = $10,
-                    videos = $11,
+                    webinar_link = $10,
+                    documents = $11,
+                    videos = $12,
                     updated_at = CURRENT_TIMESTAMP
-                WHERE id = $12
+                WHERE id = $13
                 RETURNING *
             `;
             result = await client.query(updateQuery, [
@@ -123,6 +172,7 @@ export const upsertUpdate = async (req: Request, res: Response) => {
                 safeSpeakerRole,
                 safeSpeakerOrg,
                 safeSpeakerImage,
+                safeWebinarLink,
                 JSON.stringify(safeDocuments),
                 JSON.stringify(safeVideos),
                 id
@@ -137,11 +187,11 @@ export const upsertUpdate = async (req: Request, res: Response) => {
             // Insert
             console.log('[LabourLaw] Creating new record');
             const insertQuery = `
-                INSERT INTO labour_law_updates (
+                INSERT INTO labour_law_updates(
                     title, description, release_date, end_date, is_visible,
                     speaker_name, speaker_role, speaker_org, speaker_image,
-                    documents, videos
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                    webinar_link, documents, videos
+                ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 RETURNING *
             `;
             result = await client.query(insertQuery, [
@@ -154,6 +204,7 @@ export const upsertUpdate = async (req: Request, res: Response) => {
                 safeSpeakerRole,
                 safeSpeakerOrg,
                 safeSpeakerImage,
+                safeWebinarLink,
                 JSON.stringify(safeDocuments),
                 JSON.stringify(safeVideos)
             ]);

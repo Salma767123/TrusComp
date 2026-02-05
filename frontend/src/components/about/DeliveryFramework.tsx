@@ -2,12 +2,12 @@ import { motion } from "framer-motion";
 import { useMemo } from "react";
 
 const phases = [
-    { step: "01", title: "Needs Analysis", range: "Week 1-2" },
-    { step: "02", title: "Project Planning", range: "Week 3" },
-    { step: "03", title: "Technical Setup", range: "Week 4" },
-    { step: "04", title: "User Onboarding", range: "Week 4-5" },
-    { step: "05", title: "Pilot Testing", range: "Week 6-7" },
-    { step: "06", title: "Full-Scale Deployment", range: "Week 8-9" },
+    { step: "01", title: "Needs Analysis", range: "Phase 1-2" },
+    { step: "02", title: "Project Planning", range: "Phase 3" },
+    { step: "03", title: "Technical Setup", range: "Phase 4" },
+    { step: "04", title: "User Onboarding", range: "Phase 4-5" },
+    { step: "05", title: "Pilot Testing", range: "Phase 6-7" },
+    { step: "06", title: "Full-Scale Deployment", range: "Phase 8-9" },
     { step: "07", title: "Ongoing Support", range: "Ongoing" },
 ];
 

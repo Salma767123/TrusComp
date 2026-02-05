@@ -3,7 +3,13 @@ import { motion } from "framer-motion";
 import { useParams, Link, Navigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { ServiceDoodle } from "@/components/services/ServiceDoodles";
-import { CheckCircle2, ArrowRight, ShieldCheck, TrendingUp, Users, RefreshCw } from "lucide-react";
+import { CheckCircle2, ArrowRight, ShieldCheck, TrendingUp, Users, RefreshCw, HelpCircle } from "lucide-react";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
 
 import { useSEO } from "@/hooks/useSEO";
 
@@ -57,16 +63,17 @@ const ServiceDetail = () => {
                         {/* Main Content Column */}
                         <div className="lg:col-span-2 space-y-16">
                             <OverviewSection service={service} />
-                            <ProblemsSection problems={service.problems} />
-                            <FeaturesGrid features={service.features} />
-                            <BenefitsList benefits={service.benefits} />
+                            {service.problems?.length > 0 && <ProblemsSection problems={service.problems} />}
+                            {service.features?.length > 0 && <FeaturesGrid features={service.features} />}
+                            {service.benefits?.length > 0 && <BenefitsList benefits={service.benefits} />}
+                            {service.faqs?.length > 0 && <FAQSection faqs={service.faqs} />}
                         </div>
 
                         {/* Sidebar / Sticky Action Column */}
                         <div className="lg:col-span-1">
                             <div className="sticky top-24 space-y-8">
                                 <ActionCard doodleType={service.doodle_type || "shield"} />
-                                <TrustCard points={service.whyTrusComp} />
+                                {service.whyTrusComp?.length > 0 && <TrustCard points={service.whyTrusComp} />}
                             </div>
                         </div>
                     </div>
@@ -98,7 +105,7 @@ const ServiceHero = ({ service }: any) => {
             <div className="absolute inset-0 bg-gradient-to-b from-slate-950 to-slate-900" />
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 animate-pulse-float"></div>
 
-            <div className="absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none">
+            <div className="absolute right-0 top-0 w-1/3 h-full opacity-80 pointer-events-none">
                 <ServiceDoodle type={service.doodle_type || "shield"} />
             </div>
             <div className="section-container relative z-10">
@@ -130,9 +137,10 @@ const OverviewSection = ({ service }: any) => {
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                 <ShieldCheck className="w-6 h-6 text-primary" /> Service Overview
             </h2>
-            <p className="text-lg text-foreground/80 leading-relaxed p-6 bg-card rounded-xl border border-border shadow-sm">
-                {service.long_overview || `We ensure complete compliance for ${service.title} through our automated TrusComp platform. Our system streamlines all regulatory requirements, reducing risk and operational overhead for your organization.`}
-            </p>
+            <div
+                className="prose prose-slate max-w-none text-foreground/80 leading-relaxed p-6 bg-card rounded-xl border border-border shadow-sm"
+                dangerouslySetInnerHTML={{ __html: service.long_overview || `<p>We ensure complete compliance for ${service.title} through our automated TrusComp platform. Our system streamlines all regulatory requirements, reducing risk and operational overhead for your organization.</p>` }}
+            />
         </div>
     )
 }
@@ -219,7 +227,7 @@ const ActionCard = ({ doodleType }: any) => {
                         <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white" />
                         <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white" />
                     </div>
-                    <span className="text-xs text-muted-foreground font-medium">500+ Clients Trust Us</span>
+                    <span className="text-xs text-muted-foreground font-medium">100+ Clients Trust Us</span>
                 </div>
             </div>
         </div>
@@ -239,6 +247,28 @@ const TrustCard = ({ points }: any) => {
                     </li>
                 ))}
             </ul>
+        </div>
+    )
+}
+
+const FAQSection = ({ faqs }: any) => {
+    return (
+        <div>
+            <h2 className="text-2xl font-bold mb-8 flex items-center gap-3">
+                <HelpCircle className="w-6 h-6 text-primary" /> Frequently Asked Questions
+            </h2>
+            <Accordion type="single" collapsible className="w-full space-y-4">
+                {faqs.map((faq: any, i: number) => (
+                    <AccordionItem key={i} value={`item-${i}`} className="border border-border rounded-xl px-6 bg-card data-[state=open]:border-primary/50 transition-all">
+                        <AccordionTrigger className="text-lg font-bold hover:no-underline py-6 text-left">
+                            {faq.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground pb-6 leading-relaxed">
+                            <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+            </Accordion>
         </div>
     )
 }

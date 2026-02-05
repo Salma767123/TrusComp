@@ -316,21 +316,29 @@ const Contact = () => {
               <div className="bg-slate-900 text-white rounded-2xl p-8 shadow-xl shadow-slate-900/10">
                 <h4 className="font-display font-semibold mb-4 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  Office Hours
+                  Connect with Our Team
                 </h4>
                 <ul className="space-y-3 text-sm text-slate-300">
                   <li className="flex justify-between border-b border-slate-800 pb-2">
-                    <span>Monday - Friday</span>
-                    <span className="font-medium text-white">9:00 AM - 6:00 PM</span>
+                    <span>Contact Mr</span>
+                    <span className="font-medium text-white">MV Prakash</span>
                   </li>
                   <li className="flex justify-between border-b border-slate-800 pb-2">
-                    <span>Saturday</span>
-                    <span className="font-medium text-white">9:00 AM - 1:00 PM</span>
+                    <span>Designation</span>
+                    <span className="font-medium text-white">Senior Vice President</span>
                   </li>
-                  <li className="flex justify-between">
+                  <li className="flex justify-between border-b border-slate-800 pb-2">
+                    <span>Phone</span>
+                    <span className="font-medium text-white">+91 97438 83000</span>
+                  </li>
+                  <li className="flex justify-between border-b border-slate-800 pb-2">
+                    <span>Mail</span>
+                    <span className="font-medium text-white">prakash@truscomp.com</span>
+                  </li>
+                  {/* <li className="flex justify-between">
                     <span>Sunday</span>
                     <span className="font-medium text-orange-400">Closed</span>
-                  </li>
+                  </li> */}
                 </ul>
               </div>
             </div>
@@ -339,7 +347,7 @@ const Contact = () => {
             <div className="lg:col-span-3">
               <div className="dashboard-card p-8">
                 <h3 className="text-xl font-display font-semibold text-foreground mb-6">
-                  Compliance Intake Form
+                  Compliance Enquiry Form
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-2">

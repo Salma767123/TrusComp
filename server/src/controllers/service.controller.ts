@@ -5,7 +5,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 // PUBLIC & ADMIN: Get all services
 export const getAllServices = async (req: Request, res: Response) => {
     try {
-        const { public_view } = req.query;
+        const { public_view, status } = req.query;
         let query = `
             SELECT 
                 id, slug, title, 
@@ -14,9 +14,27 @@ export const getAllServices = async (req: Request, res: Response) => {
                 doodle_type, is_visible, sort_order 
             FROM services
         `;
+
+        const conditions: string[] = [];
+
         if (public_view === 'true') {
-            query += ' WHERE is_visible = true';
+            conditions.push('is_visible = true');
         }
+
+        // Handle Status Filter
+        const statusValue = typeof status === 'string' ? status.trim().toLowerCase() : null;
+        if (statusValue === 'active') {
+            conditions.push('is_visible = true');
+        } else if (statusValue === 'inactive') {
+            conditions.push('is_visible = false');
+        } else if (statusValue === 'all') {
+            // Show all
+        }
+
+        if (conditions.length > 0) {
+            query += ' WHERE ' + conditions.join(' AND ');
+        }
+
         query += ' ORDER BY sort_order ASC, id ASC';
 
         const result = await pool.query(query);
@@ -48,11 +66,12 @@ export const getServiceBySlug = async (req: Request, res: Response) => {
         const service = serviceResult.rows[0];
         const serviceId = service.id;
 
-        const [problems, features, benefits, whyTrusComp] = await Promise.all([
+        const [problems, features, benefits, whyTrusComp, faqs] = await Promise.all([
             pool.query('SELECT problem_text FROM service_problems WHERE service_id = $1 ORDER BY sort_order ASC', [serviceId]),
             pool.query('SELECT title, hint FROM service_features WHERE service_id = $1 ORDER BY sort_order ASC', [serviceId]),
             pool.query('SELECT keyword, text FROM service_benefits WHERE service_id = $1 ORDER BY sort_order ASC', [serviceId]),
-            pool.query('SELECT point_text FROM service_why_truscomp WHERE service_id = $1 ORDER BY sort_order ASC', [serviceId])
+            pool.query('SELECT point_text FROM service_why_truscomp WHERE service_id = $1 ORDER BY sort_order ASC', [serviceId]),
+            pool.query('SELECT question, answer FROM service_faqs WHERE service_id = $1 ORDER BY sort_order ASC', [serviceId])
         ]);
 
         res.json({
@@ -60,7 +79,8 @@ export const getServiceBySlug = async (req: Request, res: Response) => {
             problems: problems.rows.map(r => r.problem_text),
             features: features.rows,
             benefits: benefits.rows,
-            whyTrusComp: whyTrusComp.rows.map(r => r.point_text)
+            whyTrusComp: whyTrusComp.rows.map(r => r.point_text),
+            faqs: faqs.rows
         });
     } catch (err) {
         console.error('Error fetching service detail:', err);
@@ -82,7 +102,8 @@ export const upsertService = async (req: AuthRequest, res: Response) => {
             commonProblems, problems,
             features,
             benefits,
-            whyTruscomp, whyTrusComp
+            whyTruscomp, whyTrusComp,
+            faqs
         } = req.body;
 
         if (!title) {
@@ -131,7 +152,8 @@ export const upsertService = async (req: AuthRequest, res: Response) => {
             common_problems: commonProblems ?? problems ?? [],
             why_truscomp: whyTruscomp ?? whyTrusComp ?? [],
             features: features ?? [],
-            benefits: benefits ?? []
+            benefits: benefits ?? [],
+            faqs: faqs ?? []
         };
 
         await pool.query('BEGIN');
@@ -165,6 +187,7 @@ export const upsertService = async (req: AuthRequest, res: Response) => {
         await pool.query('DELETE FROM service_features WHERE service_id = $1', [serviceId]);
         await pool.query('DELETE FROM service_benefits WHERE service_id = $1', [serviceId]);
         await pool.query('DELETE FROM service_why_truscomp WHERE service_id = $1', [serviceId]);
+        await pool.query('DELETE FROM service_faqs WHERE service_id = $1', [serviceId]);
 
         if (Array.isArray(data.common_problems)) {
             for (let i = 0; i < data.common_problems.length; i++) {
@@ -191,6 +214,15 @@ export const upsertService = async (req: AuthRequest, res: Response) => {
             for (let i = 0; i < data.why_truscomp.length; i++) {
                 const w = data.why_truscomp[i];
                 if (w) await pool.query('INSERT INTO service_why_truscomp (service_id, point_text, sort_order) VALUES ($1, $2, $3)', [serviceId, w, i]);
+            }
+        }
+
+        if (Array.isArray(data.faqs)) {
+            for (let i = 0; i < data.faqs.length; i++) {
+                const q = data.faqs[i];
+                if (q.question && q.answer) {
+                    await pool.query('INSERT INTO service_faqs (service_id, question, answer, sort_order) VALUES ($1, $2, $3, $4)', [serviceId, q.question, q.answer, i]);
+                }
             }
         }
 

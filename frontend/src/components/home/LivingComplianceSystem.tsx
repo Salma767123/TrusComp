@@ -10,42 +10,42 @@ const services = [
         title: "Labor Law Compliance",
         descriptor: "Expert-led solutions tailored for businesses leveraging automation.",
         outcomes: ["Zero Risk", "Automated Workflows", "Audit Ready"],
-        position: { desktop: { top: "12%", left: "50%", transform: "translateX(-50%)" }, angle: 270 }
+        position: { desktop: { top: "10%", left: "50%", transform: "translateX(-50%)" }, angle: 270 }
     },
     {
         id: "records-registers",
         title: "Records & Registers",
-        descriptor: "Automated solutions for generating and managing mandatory records.",
+        descriptor: "Automated solutions for managing mandatory records.",
         outcomes: ["100% Adherence", "Cloud Storage", "Audit Ready"],
-        position: { desktop: { top: "28%", right: "12%" }, angle: 330 }
+        position: { desktop: { top: "25%", right: "8%" }, angle: 330 }
     },
     {
         id: "licenses-registrations",
         title: "Licenses & Registrations",
         descriptor: "Simplifies licensing, renewals, and amendments seamlessly.",
         outcomes: ["Real-Time Tracking", "Expert Support", "No Disruptions"],
-        position: { desktop: { bottom: "28%", right: "12%" }, angle: 30 }
+        position: { desktop: { bottom: "25%", right: "8%" }, angle: 30 }
     },
     {
         id: "vendor-audit",
         title: "Vendor Audit",
         descriptor: "Streamlines vendor audits for supply chain visibility.",
         outcomes: ["Safe Supply Chain", "Risk Categorization", "Liability Check"],
-        position: { desktop: { bottom: "12%", left: "50%", transform: "translateX(-50%)" }, angle: 90 }
+        position: { desktop: { bottom: "10%", left: "50%", transform: "translateX(-50%)" }, angle: 90 }
     },
     {
         id: "payroll-compliance",
         title: "Payroll Compliance",
-        descriptor: "Advanced automation for error-free payroll processing and filings.",
+        descriptor: "Advanced automation for error-free payroll processing.",
         outcomes: ["Zero Errors", "Precise Deductions", "Real-Time Tracking"],
-        position: { desktop: { bottom: "28%", left: "12%" }, angle: 150 }
+        position: { desktop: { bottom: "25%", left: "8%" }, angle: 150 }
     },
     {
         id: "remittances-returns",
         title: "Remittances & Returns",
         descriptor: "Automated processes for timely remittances and returns.",
-        outcomes: ["Multi-State Adherence", "Clear Audit Trails", "Reduced Overhead"],
-        position: { desktop: { top: "28%", left: "12%" }, angle: 210 }
+        outcomes: ["Multi-State Adherence", "Audit Trails", "Reduced Overhead"],
+        position: { desktop: { top: "25%", left: "8%" }, angle: 210 }
     }
 ];
 
@@ -282,12 +282,17 @@ const MobileServiceItem = ({
         "remittances-returns": "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
     };
 
+    // Premium mobile palette
+    const bgColors = ["bg-[#FFFFFF]", "bg-[#FFF6EC]", "bg-[#FAF3E8]"];
+    const bgColor = bgColors[index % bgColors.length];
+
     return (
         <div
             className={cn(
-                "relative overflow-hidden rounded-2xl bg-gradient-to-br from-white to-slate-50/50 border border-border/40 transition-all duration-500 cursor-pointer",
+                "relative overflow-hidden rounded-2xl border border-border/40 transition-all duration-500 cursor-pointer shadow-sm",
+                bgColor,
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
-                isExpanded ? "shadow-lg" : "shadow-sm hover:shadow-md"
+                isExpanded ? "shadow-xl scale-[1.02] ring-1 ring-primary/10" : "hover:shadow-md"
             )}
             style={{ transitionDelay: `${index * 100}ms` }}
             onClick={() => setIsExpanded(!isExpanded)}
@@ -312,11 +317,11 @@ const MobileServiceItem = ({
                     </div>
 
                     <div className="flex-1">
-                        <h3 className="text-base font-display font-semibold text-foreground">
+                        <h3 className="text-sm md:text-base font-display font-bold text-slate-900">
                             {service.title}
                         </h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            {service.descriptor.slice(0, 40)}...
+                        <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                            {service.descriptor.slice(0, 45)}...
                         </p>
                     </div>
 
@@ -337,7 +342,7 @@ const MobileServiceItem = ({
                     isExpanded ? "max-h-60 opacity-100 mt-4" : "max-h-0 opacity-0"
                 )}>
                     <div className="pt-4 border-t border-border/30">
-                        <p className="text-sm text-muted-foreground mb-4">
+                        <p className="text-xs md:text-sm font-medium text-slate-600 leading-relaxed mb-4">
                             {service.descriptor}
                         </p>
                         <div className="flex flex-wrap gap-2 mb-4">
@@ -415,7 +420,7 @@ const LivingComplianceSystem = () => {
             </div>
 
             {/* Desktop Layout - System View */}
-            <div className="hidden lg:block relative w-full h-[calc(100vh-200px)]">
+            <div className="hidden lg:block relative w-full max-w-[1400px] mx-auto h-[calc(100vh-200px)] px-12">
                 {/* Central Core */}
                 <ComplianceCore isVisible={isInView} />
 

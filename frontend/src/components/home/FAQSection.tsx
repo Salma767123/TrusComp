@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
-import { HelpCircle, Sparkles, ArrowRight, MessageSquare, ChevronRight, Minimize2, X } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 const faqs = [
@@ -9,193 +8,136 @@ const faqs = [
     id: 1,
     question: "What compliances do you handle?",
     answer: "We handle a comprehensive range of compliance needs including PF, ESIC, Professional Tax, Labor Welfare Fund, and all major Central and State labor laws across India.",
-    icon: Sparkles,
   },
   {
     id: 2,
     question: "How often are filings done?",
     answer: "Most statutory filings are done monthly. Our system tracks every deadline and automates the preparation process to ensure zero late fees and complete accuracy.",
-    icon: HelpCircle,
   },
   {
     id: 3,
     question: "Is this applicable PAN-India?",
     answer: "Absolutely. Our solutions are designed to scale across all states in India, handling varied state-specific regulations and local municipal compliances seamlessly.",
-    icon: MessageSquare,
   },
   {
     id: 4,
     question: "What happens during inspections?",
     answer: "We provide full support during government inspections. Our digital records are audit-ready, and our team of experts provides on-ground representation to resolve queries.",
-    icon: Sparkles,
   },
 ];
 
 const FAQSection = () => {
-  const [activeIdx, setActiveIdx] = useState<number | null>(null);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const [activeId, setActiveId] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (activeIdx !== null) return;
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-
-    setRotation({
-      x: -y * 5, // Reduced rotation for subtle effect
-      y: x * 5
-    });
-  };
-
-  const handleMouseLeave = () => {
-    setRotation({ x: 0, y: 0 });
-  };
 
   return (
     <section
       ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="relative py-20 lg:py-28 flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-white to-slate-50"
+      className="relative py-24 lg:py-32 flex flex-col items-center justify-center overflow-hidden bg-slate-50"
     >
-      {/* Subtle Background Elements */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[100px]" />
+      {/* 7. Background Enhancement: Subtle Animated Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(var(--primary-rgb),0.03),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.03),transparent_60%)]" />
+
+        {/* Abstract Floating Orbs */}
+        <motion.div
+          animate={{ y: [0, -50, 0], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[80px]"
+        />
+        <motion.div
+          animate={{ y: [0, 50, 0], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-orange-500/5 rounded-full blur-[80px]"
+        />
       </div>
 
-      <div className="section-container relative z-10 w-full px-4">
+      <div className="section-container relative z-10 w-full px-4 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 text-primary text-[11px] font-bold uppercase tracking-widest border border-primary/10">
-            <Sparkles className="w-3 h-3" />
-            Holographic FAQ
+        <div className="text-center mb-16 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-widest shadow-sm backdrop-blur-sm">
+            <Sparkles className="w-3 h-3 text-orange-500" />
+            Knowledge Base
           </div>
-          <h2 className="text-3xl lg:text-5xl font-display font-bold text-slate-900 tracking-tight">
-            Discovery <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">Deck</span>
+          <h2 className="text-3xl lg:text-4xl font-display font-bold text-slate-900 tracking-tight">
+            Discovery <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-900">Deck</span>
           </h2>
-          <p className="text-slate-500 text-lg max-w-lg mx-auto leading-relaxed font-normal">
-            Explore core compliance insights through our interactive knowledge base.
+          <p className="text-slate-500 text-base max-w-lg mx-auto leading-relaxed font-normal">
+            Essential insights into our compliance ecosystem.
           </p>
         </div>
 
-        {/* The Deck Area */}
-        <div className="relative min-h-[500px] flex items-center justify-center perspective-1000">
+        {/* 1. Layout: Unique List Style */}
+        <div className="flex flex-col gap-4">
+          {faqs.map((faq, index) => {
+            const isActive = activeId === faq.id;
 
-          {/* Card Stack */}
-          <motion.div
-            className="relative w-full max-w-5xl flex flex-wrap justify-center gap-6 preserve-3d"
-            animate={{
-              rotateX: activeIdx === null ? rotation.x : 0,
-              rotateY: activeIdx === null ? rotation.y : 0,
-              opacity: activeIdx === null ? 1 : 0,
-            }}
-            transition={{ type: "spring", stiffness: 100, damping: 20 }}
-            style={{ pointerEvents: activeIdx === null ? 'auto' : 'none' }}
-          >
-            {faqs.map((faq, index) => (
+            return (
               <motion.div
                 key={faq.id}
-                layoutId={`card-${faq.id}`}
-                onClick={() => setActiveIdx(index)}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                onClick={() => setActiveId(isActive ? null : faq.id)}
                 className={cn(
-                  "group relative w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] h-[280px] rounded-3xl cursor-pointer transition-all duration-300",
-                  "bg-white/40 backdrop-blur-md border border-white/40 shadow-xl hover:shadow-2xl hover:bg-white/60",
-                  "flex flex-col justify-between p-6 overflow-hidden"
+                  "group relative w-full overflow-hidden cursor-pointer",
+                  "bg-white/60 backdrop-blur-md border border-white/60",
+                  "rounded-2xl transition-all duration-500 ease-out",
+                  isActive ? "shadow-md bg-white/80 border-primary/10" : "hover:bg-white/80 hover:border-white hover:shadow-sm"
                 )}
-                whileHover={{ y: -5, scale: 1.02 }}
               >
-                {/* Gradient Gloss */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-50" />
+                {/* 3. Animations: Hover Glow Line (Desktop) */}
+                <div className={cn(
+                  "absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-orange-500 transition-all duration-300",
+                  isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100" // Opacity only, slightly distinct on hover
+                )} />
 
-                <div className="relative z-10">
-                  <div className="w-10 h-10 rounded-2xl bg-white/50 border border-white/60 flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
-                    <faq.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-2">
-                    0{faq.id}
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-800 group-hover:text-primary transition-colors leading-snug">
-                    {faq.question}
-                  </h3>
-                </div>
-
-                <div className="relative z-10 flex items-center gap-2 text-primary text-xs font-bold uppercase tracking-wider opacity-60 group-hover:opacity-100 transition-opacity">
-                  Read <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Active Expanded View */}
-          <AnimatePresence>
-            {activeIdx !== null && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
-                {/* Backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onClick={() => setActiveIdx(null)}
-                  className="absolute inset-0 bg-slate-900/10 backdrop-blur-sm"
-                />
-
-                {/* Expanded Card */}
-                <motion.div
-                  layoutId={`card-${faqs[activeIdx].id}`}
-                  className="w-full max-w-2xl bg-white/80 backdrop-blur-xl border border-white/50 shadow-2xl rounded-[40px] overflow-hidden relative"
-                >
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setActiveIdx(null); }}
-                    className="absolute top-6 right-6 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors z-20"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-
-                  <div className="p-8 lg:p-12">
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-6 border border-primary/20">
-                        <faqs[activeIdx].icon className="w-3 h-3" />
-                        Insight Unlocked
-                      </div>
-
-                      <h3 className="text-2xl lg:text-4xl font-display font-semibold text-slate-900 mb-6 leading-tight">
-                        {faqs[activeIdx].question}
+                <div className="px-6 py-5 lg:px-8 lg:py-6 relative z-10">
+                  <div className="flex items-center justify-between gap-4">
+                    {/* 4. Typography: Question */}
+                    <div className="flex items-center gap-4">
+                      {/* Minimal Accent Dot */}
+                      <div className={cn(
+                        "w-1.5 h-1.5 rounded-full transition-colors duration-300 shrink-0",
+                        isActive ? "bg-primary" : "bg-slate-300 group-hover:bg-primary/50"
+                      )} />
+                      <h3 className={cn(
+                        "text-base lg:text-lg font-medium text-slate-800 transition-colors duration-300",
+                        isActive && "text-primary"
+                      )}>
+                        {faq.question}
                       </h3>
-
-                      <p className="text-lg text-slate-600 font-normal leading-relaxed mb-8">
-                        {faqs[activeIdx].answer}
-                      </p>
-
-                      <div className="flex items-center gap-6 pt-6 border-t border-slate-100/50">
-                        <Link
-                          to="/contact"
-                          className="inline-flex items-center gap-2 text-primary font-semibold group"
-                        >
-                          <span className="border-b border-primary/30 group-hover:border-primary transition-colors pb-0.5">Talk to an expert</span>
-                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                      </div>
-                    </motion.div>
+                    </div>
                   </div>
 
-                  {/* Decorative Gradients */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-orange-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
+                  {/* 2. Interaction: Answer Reveal (Fade + Slide) */}
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, y: -4 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -4 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      >
+                        {/* 4. Typography: Answer */}
+                        <div className="pt-4 pl-[22px] lg:pl-[22px] pr-4">
+                          <p className="text-sm lg:text-base text-slate-500 font-normal leading-relaxed">
+                            {faq.answer}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
+                {/* Subtle Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-700" />
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -203,4 +145,3 @@ const FAQSection = () => {
 };
 
 export default FAQSection;
-

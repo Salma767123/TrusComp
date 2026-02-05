@@ -35,7 +35,7 @@ const VisionMission = () => {
                         className="max-w-4xl mx-auto text-center"
                     >
                         <span className="text-primary font-display font-medium tracking-[0.3em] uppercase mb-8 block text-sm">
-                            Our North Star
+                            Our Vision
                         </span>
                         <div className="relative">
                             <h3 className="text-5xl md:text-7xl font-display font-bold leading-tight tracking-tighter">
@@ -48,8 +48,7 @@ const VisionMission = () => {
                             />
                         </div>
                         <p className="mt-8 text-xl text-muted-foreground/80 leading-relaxed font-light">
-                            We envision a future where regulatory excellence is effortless,
-                            setting benchmarks for ethical business practices across India.
+                            To be the leading force in transforming compliance management in India, enabling organizations to achieve regulatory excellence effortlessly. We aim to set new benchmarks for ethical business practices across industries, fostering trust, transparency, and innovation.
                         </p>
                     </motion.div>
 
@@ -59,14 +58,13 @@ const VisionMission = () => {
                         className="max-w-4xl mx-auto text-center"
                     >
                         <span className="text-accent font-display font-medium tracking-[0.3em] uppercase mb-8 block text-sm">
-                            Our Constant Driver
+                            Our Mission
                         </span>
                         <h3 className="text-5xl md:text-7xl font-display font-bold leading-tight tracking-tighter">
                             Empowering businesses with <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-primary">innovative</span> solutions.
                         </h3>
                         <p className="mt-8 text-xl text-muted-foreground/80 leading-relaxed font-light">
-                            Simplifying regulatory adherence and enhancing operational efficiency,
-                            allowing organizations to focus on growth with complete trust.
+                            To empower businesses with innovative compliance solutions that simplify regulatory adherence and enhance operational efficiency. We strive to enable organizations to focus on growth with complete trust in their compliance.
                         </p>
                     </motion.div>
                 </div>

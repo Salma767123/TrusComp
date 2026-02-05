@@ -83,11 +83,31 @@ const BlogManager = () => {
     const [blogs, setBlogs] = useState<Blog[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [statusFilter, setStatusFilter] = useState("active");
+    const itemsPerPage = 7;
+
     const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
     const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
     const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Search debouncing
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Reset to page 1 when filters or search change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedCategory, dateFilter, debouncedSearch, statusFilter]);
 
     const [uploadingBanner, setUploadingBanner] = useState(false);
     const [uploadingAttachments, setUploadingAttachments] = useState(false);
@@ -105,26 +125,54 @@ const BlogManager = () => {
 
     useEffect(() => {
         fetchBlogs();
-    }, []);
+    }, [selectedCategory, dateFilter, debouncedSearch, statusFilter, currentPage]);
 
     const fetchBlogs = async () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await authenticatedFetch(`${apiBase}/blogs?include_hidden=true`, {
-                // credentials: 'include'
-            });
+            const params = new URLSearchParams();
+            params.append('include_hidden', 'true');
+            params.append('page', currentPage.toString());
+            params.append('limit', itemsPerPage.toString());
+
+            if (selectedCategory !== "All Categories") {
+                params.append('category', selectedCategory);
+            }
+
+            if (dateFilter) {
+                params.append('startDate', format(dateFilter, 'yyyy-MM-dd'));
+                params.append('endDate', format(dateFilter, 'yyyy-MM-dd'));
+            }
+
+            if (debouncedSearch) {
+                params.append('searchTerm', debouncedSearch);
+            }
+
+            if (statusFilter) {
+                params.append('status', statusFilter);
+            }
+
+            const url = `${apiBase}/blogs?${params.toString()}`;
+            const response = await authenticatedFetch(url);
+
             if (response.ok) {
-                const data = await response.json();
+                const result = await response.json();
+                const items = result.data || [];
+                const pagination = result.pagination || {};
+
                 // Parse JSONB fields
-                const parsedData = data.map((item: any) => ({
+                const parsedData = items.map((item: any) => ({
                     ...item,
                     tags: typeof item.tags === 'string' ? JSON.parse(item.tags) : item.tags || [],
                     attachments: typeof item.attachments === 'string' ? JSON.parse(item.attachments) : item.attachments || []
                 }));
-                setBlogs(parsedData);
 
-                // Extract unique categories from data
+                setBlogs(parsedData);
+                setTotalCount(pagination.total || items.length);
+                setTotalPages(pagination.totalPages || 1);
+
+                // Extract unique categories (optional, as they might be pre-defined)
                 const uniqueCats = Array.from(new Set(parsedData.map((item: any) => item.category))).filter(Boolean) as string[];
                 setCategories(prev => Array.from(new Set([...prev, ...uniqueCats])).sort());
             }
@@ -342,28 +390,8 @@ const BlogManager = () => {
         }
     };
 
-    const filteredBlogs = blogs
-        .filter(b => {
-            const matchesSearch = b.title.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesCategory = selectedCategory === "All Categories" || b.category === selectedCategory;
-
-            let matchesDate = true;
-            if (dateFilter) {
-                const blogDate = new Date(b.published_date);
-                const filterDate = new Date(dateFilter);
-                // Compare Year, Month, Day
-                matchesDate =
-                    blogDate.getFullYear() === filterDate.getFullYear() &&
-                    blogDate.getMonth() === filterDate.getMonth() &&
-                    blogDate.getDate() === filterDate.getDate();
-            }
-
-            return matchesSearch && matchesCategory && matchesDate;
-        })
-        .sort((a, b) => {
-            // Always sort by release date descending (Newest First)
-            return new Date(b.published_date).getTime() - new Date(a.published_date).getTime();
-        });
+    // Sorting handled on backend, and filtering also handled on backend
+    const displayBlogs = blogs;
 
     // Format date to DD-MM-YYYY for display
     const formatDate = (dateStr: string | null) => {
@@ -379,7 +407,7 @@ const BlogManager = () => {
     const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
+        <div className="flex flex-col h-[calc(100vh-120px)] p-6 max-w-7xl mx-auto space-y-4 animate-in fade-in duration-300">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -408,6 +436,17 @@ const BlogManager = () => {
                     />
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="h-10 w-full md:w-[120px] text-xs font-bold bg-white border-slate-200 rounded-lg focus:ring-4 focus:ring-primary/5 text-slate-600 shadow-sm transition-all hover:border-slate-300">
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                            <SelectItem value="active" className="text-xs font-bold text-primary">Active</SelectItem>
+                            <SelectItem value="all" className="text-xs font-medium border-t border-slate-50 mt-1">All Status</SelectItem>
+                            <SelectItem value="inactive" className="text-xs font-medium">Inactive</SelectItem>
+                        </SelectContent>
+                    </Select>
+
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                         <SelectTrigger className="h-10 w-full md:w-[180px] text-xs font-medium bg-slate-50 border-slate-200 rounded-lg text-slate-600 shadow-sm transition-all hover:bg-slate-100">
                             <SelectValue placeholder="All Categories" />
@@ -425,8 +464,9 @@ const BlogManager = () => {
                             <Button
                                 variant="outline"
                                 className={cn(
-                                    "h-10 px-3 text-sm font-medium border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 gap-2 min-w-[140px] justify-between",
-                                    dateFilter && "border-primary text-primary bg-primary/5"
+                                    "h-10 px-3 text-xs font-bold border-slate-200 bg-white text-slate-600 gap-2 min-w-[140px] justify-between rounded-lg shadow-sm transition-all duration-200",
+                                    !dateFilter && "hover:bg-primary/5 hover:border-primary hover:text-primary",
+                                    dateFilter && "bg-primary border-primary text-white hover:bg-primary hover:border-primary hover:text-white shadow-lg shadow-primary/20"
                                 )}
                             >
                                 <div className="flex items-center gap-2">
@@ -531,45 +571,87 @@ const BlogManager = () => {
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
-                            <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Title</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-40">Release Date</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-40">Category</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-32">Status</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right w-24">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {loading ? (
-                            <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2"><RotateCw className="w-4 h-4 animate-spin" /> Loading Editorial Studio...</td></tr>
-                        ) : filteredBlogs.length > 0 ? (
-                            filteredBlogs.map((blog) => (
-                                <tr key={blog.id} className="hover:bg-slate-50/80 transition-colors">
-                                    <td className="px-4 py-3"><p className="font-semibold text-slate-900 text-xs line-clamp-1" title={blog.title}>{blog.title}</p></td>
-                                    <td className="px-4 py-3 text-xs text-slate-600 font-medium">{formatDate(blog.published_date)}</td>
-                                    <td className="px-4 py-3 text-xs">
-                                        <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold uppercase text-[9px]">{blog.category}</span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Switch checked={blog.is_visible} onCheckedChange={() => handleToggleVisibility(blog)} title={blog.is_visible ? "Enabled" : "Disabled"} className="scale-75 data-[state=checked]:bg-emerald-500" />
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary" onClick={() => handleOpenModal(blog)}><Edit className="w-3.5 h-3.5" /></Button>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500" onClick={() => handleDelete(blog.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs">No blogs found in the archive.</td></tr>
-                        )}
-                    </tbody>
-                </table>
+            {/* Table Container - Fixed Height with Pagination at bottom */}
+            <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-0">
+                <div className="flex-1 overflow-y-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 shadow-sm">
+                            <tr>
+                                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Title</th>
+                                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-40">Release Date</th>
+                                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-40">Category</th>
+                                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-32">Status</th>
+                                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right w-24">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {loading ? (
+                                <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs h-32 flex items-center justify-center gap-2"><RotateCw className="w-4 h-4 animate-spin" /> Loading Editorial Studio...</td></tr>
+                            ) : displayBlogs.length > 0 ? (
+                                displayBlogs.map((blog) => (
+                                    <tr key={blog.id} className="hover:bg-slate-50/80 transition-colors h-[54px]">
+                                        <td className="px-4 py-3"><p className="font-semibold text-slate-900 text-xs line-clamp-1" title={blog.title}>{blog.title}</p></td>
+                                        <td className="px-4 py-3 text-xs text-slate-600 font-medium">{formatDate(blog.published_date)}</td>
+                                        <td className="px-4 py-3 text-xs">
+                                            <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 font-bold uppercase text-[9px]">{blog.category}</span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Switch checked={blog.is_visible} onCheckedChange={() => handleToggleVisibility(blog)} title={blog.is_visible ? "Enabled" : "Disabled"} className="scale-75 data-[state=checked]:bg-emerald-500" />
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary" onClick={() => handleOpenModal(blog)}><Edit className="w-3.5 h-3.5" /></Button>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500" onClick={() => handleDelete(blog.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs h-32">No blogs found in the archive.</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination Controls - Fixed at bottom of table container */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-white shrink-0">
+                        <p className="text-xs text-slate-500">
+                            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} entries
+                        </p>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <Button
+                                    key={page}
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    className={cn("h-8 w-8 p-0 text-xs", currentPage === page && "bg-primary")}
+                                    onClick={() => setCurrentPage(page)}
+                                >
+                                    {page}
+                                </Button>
+                            ))}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Create/Edit Modal */}

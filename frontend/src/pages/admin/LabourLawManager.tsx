@@ -49,6 +49,7 @@ interface LabourLawUpdate {
     speaker_role: string | null;
     speaker_org: string | null;
     speaker_image: string | null;
+    webinar_link: string | null;
     documents: DocumentItem[];
     videos: VideoItem[];
 }
@@ -64,55 +65,152 @@ interface VideoItem {
     url: string;
 }
 
+const CustomCaption = ({ displayMonth }: CaptionProps) => {
+    const { goToMonth, nextMonth, previousMonth } = useNavigation();
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const handleMonthChange = (value: string) => {
+        const newMonth = new Date(displayMonth);
+        newMonth.setMonth(months.indexOf(value));
+        goToMonth?.(newMonth);
+    };
+
+    const handleYearChange = (value: string) => {
+        const newMonth = new Date(displayMonth);
+        newMonth.setFullYear(parseInt(value));
+        goToMonth?.(newMonth);
+    };
+
+    return (
+        <div className="flex items-center justify-between pt-1 relative px-1">
+            <div className="flex items-center gap-1">
+                <Select value={months[displayMonth.getMonth()]} onValueChange={handleMonthChange}>
+                    <SelectTrigger className="h-7 w-[100px] text-xs font-medium border-0 shadow-none hover:bg-slate-100 focus:ring-0 px-2 gap-1">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[200px]">
+                        {months.map((month) => (
+                            <SelectItem key={month} value={month} className="text-xs">{month}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <Select value={displayMonth.getFullYear().toString()} onValueChange={handleYearChange}>
+                    <SelectTrigger className="h-7 w-[70px] text-xs font-medium border-0 shadow-none hover:bg-slate-100 focus:ring-0 px-2 gap-1">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[200px]">
+                        {years.map((year) => (
+                            <SelectItem key={year} value={year.toString()} className="text-xs">{year}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="flex items-center gap-1">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-slate-500 hover:text-slate-900"
+                    onClick={() => previousMonth && goToMonth?.(previousMonth)}
+                    disabled={!previousMonth}
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-slate-500 hover:text-slate-900"
+                    onClick={() => nextMonth && goToMonth?.(nextMonth)}
+                    disabled={!nextMonth}
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+    );
+};
+
 const LabourLawManager = () => {
     const [updates, setUpdates] = useState<LabourLawUpdate[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const itemsPerPage = 7;
+
     const [selectedUpdate, setSelectedUpdate] = useState<LabourLawUpdate | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
     const [uploadingDocs, setUploadingDocs] = useState<Record<number, boolean>>({});
     const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+    const [statusFilter, setStatusFilter] = useState<string>("active");
+
+    // Search debouncing
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Reset to page 1 when filters or search change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [dateFilter, debouncedSearch, statusFilter]);
 
     useEffect(() => {
         fetchUpdates();
-    }, [dateFilter]);
+    }, [dateFilter, debouncedSearch, statusFilter, currentPage]);
 
     const fetchUpdates = async () => {
         setLoading(true);
         try {
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            let url = `${apiBase}/labour-law-updates?include_hidden=true`;
+            const params = new URLSearchParams();
+            params.append('include_hidden', 'true');
+            params.append('page', currentPage.toString());
+            params.append('limit', itemsPerPage.toString());
+
             if (dateFilter) {
-                // Filter by release_date on backend
-                url += `&date=${format(dateFilter, 'yyyy-MM-dd')}`;
+                params.append('startDate', format(dateFilter, 'yyyy-MM-dd'));
+                params.append('endDate', format(dateFilter, 'yyyy-MM-dd'));
             }
 
-            const response = await authenticatedFetch(url, {
-                // credentials: 'include'
-            });
+            if (debouncedSearch) {
+                params.append('searchTerm', debouncedSearch);
+            }
+
+            if (statusFilter) {
+                params.append('status', statusFilter);
+            }
+
+            const url = `${apiBase}/labour-law-updates?${params.toString()}`;
+            const response = await authenticatedFetch(url);
+
             if (response.ok) {
-                const data = await response.json();
+                const result = await response.json();
+                const items = result.data || [];
+                const pagination = result.pagination || {};
+
+                console.log(`[LabourLaw] API response: ${items.length} records found`);
+
                 // Parse JSONB fields
-                const parsedData = data.map((item: any) => ({
+                const parsedData = items.map((item: any) => ({
                     ...item,
                     documents: typeof item.documents === 'string' ? JSON.parse(item.documents) : item.documents || [],
                     videos: typeof item.videos === 'string' ? JSON.parse(item.videos) : item.videos || []
                 }));
-                // Client-side filtering as fallback/refinement if backend only supports equality
-                const filteredByDate = dateFilter
-                    ? parsedData.filter((item: any) => {
-                        const itemDate = new Date(item.release_date);
-                        return (
-                            itemDate.getFullYear() === dateFilter.getFullYear() &&
-                            itemDate.getMonth() === dateFilter.getMonth() &&
-                            itemDate.getDate() === dateFilter.getDate()
-                        );
-                    })
-                    : parsedData;
 
-                setUpdates(filteredByDate);
+                setUpdates(parsedData);
+                setTotalCount(pagination.total || items.length);
+                setTotalPages(pagination.totalPages || 1);
             }
         } catch (err) {
             toast.error("Connection failed");
@@ -136,6 +234,7 @@ const LabourLawManager = () => {
                 speaker_role: null,
                 speaker_org: null,
                 speaker_image: null,
+                webinar_link: null,
                 documents: [],
                 videos: []
             });
@@ -149,6 +248,20 @@ const LabourLawManager = () => {
         if (!selectedUpdate.title || !selectedUpdate.release_date) {
             toast.error("Title and Release Date are required");
             return;
+        }
+
+        if (selectedUpdate.end_date && new Date(selectedUpdate.end_date) <= new Date(selectedUpdate.release_date)) {
+            toast.error("Effective date must be after release date.");
+            return;
+        }
+
+        if (selectedUpdate.webinar_link && selectedUpdate.webinar_link.trim() !== "") {
+            try {
+                new URL(selectedUpdate.webinar_link);
+            } catch (e) {
+                toast.error("Please enter a valid Webinar URL (including http:// or https://)");
+                return;
+            }
         }
 
         setIsSaving(true);
@@ -327,9 +440,8 @@ const LabourLawManager = () => {
         }
     };
 
-    const filteredUpdates = updates.filter(u =>
-        u.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // No client-side filtering needed with server-side pagination
+    const displayUpdates = updates;
 
     // Format date to DD-MM-YYYY
     const formatDate = (dateStr: string | null) => {
@@ -380,8 +492,9 @@ const LabourLawManager = () => {
                                 <Button
                                     variant="outline"
                                     className={cn(
-                                        "h-9 px-3 text-xs font-medium border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 gap-2 min-w-[140px] justify-between",
-                                        dateFilter && "border-primary text-primary bg-primary/5"
+                                        "h-9 px-3 text-xs font-bold border-slate-200 bg-white text-slate-600 gap-2 min-w-[140px] justify-between rounded-lg shadow-sm transition-all duration-200",
+                                        !dateFilter && "hover:bg-primary/5 hover:border-primary hover:text-primary",
+                                        dateFilter && "bg-primary border-primary text-white hover:bg-primary hover:border-primary hover:text-white shadow-lg shadow-primary/20"
                                     )}
                                 >
                                     <div className="flex items-center gap-2">
@@ -411,87 +524,33 @@ const LabourLawManager = () => {
                                     numberOfMonths={1}
                                     className="p-3"
                                     components={{
-                                        Caption: ({ displayMonth }: CaptionProps) => {
-                                            const { goToMonth, nextMonth, previousMonth } = useNavigation();
-                                            const currentYear = new Date().getFullYear();
-                                            const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
-                                            const months = [
-                                                "January", "February", "March", "April", "May", "June",
-                                                "July", "August", "September", "October", "November", "December"
-                                            ];
-
-                                            const handleMonthChange = (value: string) => {
-                                                const newMonth = new Date(displayMonth);
-                                                newMonth.setMonth(months.indexOf(value));
-                                                goToMonth?.(newMonth);
-                                            };
-
-                                            const handleYearChange = (value: string) => {
-                                                const newMonth = new Date(displayMonth);
-                                                newMonth.setFullYear(parseInt(value));
-                                                goToMonth?.(newMonth);
-                                            };
-
-                                            return (
-                                                <div className="flex items-center justify-between pt-1 relative px-1">
-                                                    <div className="flex items-center gap-1">
-                                                        <Select value={months[displayMonth.getMonth()]} onValueChange={handleMonthChange}>
-                                                            <SelectTrigger className="h-7 w-[100px] text-xs font-medium border-0 shadow-none hover:bg-slate-100 focus:ring-0 px-2 gap-1">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent className="max-h-[200px]">
-                                                                {months.map((month) => (
-                                                                    <SelectItem key={month} value={month} className="text-xs">{month}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <Select value={displayMonth.getFullYear().toString()} onValueChange={handleYearChange}>
-                                                            <SelectTrigger className="h-7 w-[70px] text-xs font-medium border-0 shadow-none hover:bg-slate-100 focus:ring-0 px-2 gap-1">
-                                                                <SelectValue />
-                                                            </SelectTrigger>
-                                                            <SelectContent className="max-h-[200px]">
-                                                                {years.map((year) => (
-                                                                    <SelectItem key={year} value={year.toString()} className="text-xs">{year}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-slate-500 hover:text-slate-900"
-                                                            onClick={() => previousMonth && goToMonth?.(previousMonth)}
-                                                            disabled={!previousMonth}
-                                                        >
-                                                            <ChevronLeft className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 text-slate-500 hover:text-slate-900"
-                                                            onClick={() => nextMonth && goToMonth?.(nextMonth)}
-                                                            disabled={!nextMonth}
-                                                        >
-                                                            <ChevronRight className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        }
+                                        Caption: CustomCaption
                                     }}
                                 />
                             </PopoverContent>
                         </Popover>
                     </div>
+
+                    <div className="flex items-center gap-2">
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="h-9 w-[120px] text-xs font-bold bg-white border-slate-200 rounded-lg focus:ring-4 focus:ring-primary/5 text-slate-600 shadow-sm transition-all hover:border-slate-300">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                                <SelectItem value="active" className="text-xs font-bold text-primary">Active</SelectItem>
+                                <SelectItem value="all" className="text-xs font-medium border-t border-slate-50 mt-1">All Status</SelectItem>
+                                <SelectItem value="inactive" className="text-xs font-medium">Inactive</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Table Container - Fixed Height with Pagination at bottom */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200">
+                    <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 shadow-sm">
+                        <tr>
                             <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Title</th>
                             <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-32">Release Date</th>
                             <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-32">End Date</th>
@@ -501,10 +560,10 @@ const LabourLawManager = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
-                            <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2"><RotateCw className="w-4 h-4 animate-spin" /> Loading...</td></tr>
-                        ) : filteredUpdates.length > 0 ? (
-                            filteredUpdates.map((update) => (
-                                <tr key={update.id} className="hover:bg-slate-50/80 transition-colors">
+                            <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs h-32 flex items-center justify-center gap-2"><RotateCw className="w-4 h-4 animate-spin" /> Loading...</td></tr>
+                        ) : displayUpdates.length > 0 ? (
+                            displayUpdates.map((update) => (
+                                <tr key={update.id} className="hover:bg-slate-50/80 transition-colors h-[54px]">
                                     <td className="px-4 py-3"><p className="font-semibold text-slate-900 text-xs line-clamp-1" title={update.title}>{update.title}</p></td>
                                     <td className="px-4 py-3 text-xs text-slate-600 font-medium">{formatDate(update.release_date)}</td>
                                     <td className="px-4 py-3 text-xs text-slate-600 font-medium">{formatDate(update.end_date)}</td>
@@ -520,10 +579,51 @@ const LabourLawManager = () => {
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs">No updates found.</td></tr>
+                            <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs h-32">No updates found.</td></tr>
                         )}
                     </tbody>
                 </table>
+
+
+                {/* Pagination Controls - Fixed at bottom of table container */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-white shrink-0">
+                        <p className="text-xs text-slate-500">
+                            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} entries
+                        </p>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <Button
+                                    key={page}
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    className={cn("h-8 w-8 p-0 text-xs", currentPage === page && "bg-primary")}
+                                    onClick={() => setCurrentPage(page)}
+                                >
+                                    {page}
+                                </Button>
+                            ))}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Create/Edit Modal */}
@@ -559,12 +659,20 @@ const LabourLawManager = () => {
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0" align="start">
-                                                <CalendarComponent mode="single" selected={selectedUpdate.release_date ? new Date(selectedUpdate.release_date) : undefined} onSelect={(date) => date && setSelectedUpdate({ ...selectedUpdate, release_date: format(date, 'yyyy-MM-dd') })} initialFocus />
+                                                <CalendarComponent
+                                                    mode="single"
+                                                    selected={selectedUpdate.release_date ? new Date(selectedUpdate.release_date) : undefined}
+                                                    onSelect={(date) => date && setSelectedUpdate({ ...selectedUpdate, release_date: format(date, 'yyyy-MM-dd') })}
+                                                    initialFocus
+                                                    components={{
+                                                        Caption: CustomCaption
+                                                    }}
+                                                />
                                             </PopoverContent>
                                         </Popover>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">End Date (Optional)</label>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Effective Date (Optional)</label>
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className={cn("w-full h-9 text-xs justify-start text-left font-normal border-slate-200", !selectedUpdate.end_date && "text-slate-400")}>
@@ -573,9 +681,21 @@ const LabourLawManager = () => {
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0" align="start">
-                                                <CalendarComponent mode="single" selected={selectedUpdate.end_date ? new Date(selectedUpdate.end_date) : undefined} onSelect={(date) => setSelectedUpdate({ ...selectedUpdate, end_date: date ? format(date, 'yyyy-MM-dd') : null })} initialFocus />
+                                                <CalendarComponent
+                                                    mode="single"
+                                                    selected={selectedUpdate.end_date ? new Date(selectedUpdate.end_date) : undefined}
+                                                    onSelect={(date) => setSelectedUpdate({ ...selectedUpdate, end_date: date ? format(date, 'yyyy-MM-dd') : null })}
+                                                    initialFocus
+                                                    disabled={(date) => date <= new Date(selectedUpdate.release_date)}
+                                                    components={{
+                                                        Caption: CustomCaption
+                                                    }}
+                                                />
                                             </PopoverContent>
                                         </Popover>
+                                        {selectedUpdate.end_date && new Date(selectedUpdate.end_date) <= new Date(selectedUpdate.release_date) && (
+                                            <p className="text-[10px] text-red-500 font-bold mt-1 tracking-tight">Effective date must be after release date.</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -621,6 +741,18 @@ const LabourLawManager = () => {
                                                 </div>
                                             )}
                                         </div>
+                                    </div>
+
+                                    <div className="col-span-2 space-y-1.5 pt-2">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Webinar Registration Link (Optional)</label>
+                                        <Input
+                                            value={selectedUpdate.webinar_link || ""}
+                                            onChange={(e) => setSelectedUpdate({ ...selectedUpdate, webinar_link: e.target.value })}
+                                            className="h-9 text-xs"
+                                            placeholder="e.g., https://zoom.us/webinar/register/..."
+                                            type="url"
+                                        />
+                                        <p className="text-[9px] text-slate-400 italic">Provide a valid link URL</p>
                                     </div>
                                 </div>
                             </div>

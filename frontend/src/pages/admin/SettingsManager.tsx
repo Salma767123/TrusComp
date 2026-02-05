@@ -13,7 +13,8 @@ import {
     Facebook,
     Instagram,
     Twitter,
-    Info
+    Info,
+    MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -200,6 +201,7 @@ const SettingsManager = () => {
                 const generalKeys = [
                     'admin_account_email',
                     'contact_phone',
+                    'whatsapp_number',
                     'contact_email',
                     'office_address',
                     'social_links',
@@ -432,6 +434,23 @@ const SettingsManager = () => {
                                             placeholder="+91 99999 99999"
                                         />
                                     </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">WhatsApp Number</label>
+                                    <div className="relative">
+                                        <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Input
+                                            type="tel"
+                                            value={settings.whatsapp_number || ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/[^0-9+ ]/g, '');
+                                                updateSetting('whatsapp_number', val);
+                                            }}
+                                            className="h-10 pl-9 text-sm font-medium border-slate-200"
+                                            placeholder="+91 99999 99999"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-slate-400">Add including country code (e.g., +91). Leave empty to disable.</p>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Email ID <span className="text-red-500">*</span></label>

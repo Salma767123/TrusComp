@@ -2,47 +2,116 @@ import { Request, Response } from 'express';
 import pool from '../config/db';
 import cloudinary from '../config/cloudinary';
 
-// PUBLIC & ADMIN: Get all resources with filtering
+// PUBLIC & ADMIN: Get all resources with filtering and pagination
 export const getResources = async (req: Request, res: Response) => {
     try {
-        const { category, state, include_hidden, startDate, endDate } = req.query;
-        let query = "SELECT * FROM resources WHERE category != 'Labour Law Updates'";
+        const { category, state, include_hidden, startDate, endDate, searchTerm, page = 1, limit = 7, status } = req.query;
+        const pageNum = parseInt(page as string) || 1;
+        const limitNum = parseInt(limit as string) || 7;
+        const offset = (pageNum - 1) * limitNum;
+
+        const isHolidays = category === 'Holidays List';
         const params: any[] = [];
+
+        let baseCondition = "WHERE category != 'Labour Law Updates'";
+
+        // Handle Status Filter
+        const statusValue = typeof status === 'string' ? status.trim().toLowerCase() : null;
+        if (statusValue === 'active') {
+            baseCondition += ' AND is_visible = TRUE';
+        } else if (statusValue === 'inactive') {
+            baseCondition += ' AND is_visible = FALSE';
+        } else if (statusValue === 'all') {
+            // No visibility condition
+        } else {
+            // Default visibility
+            if (include_hidden !== 'true') {
+                baseCondition += ' AND is_visible = TRUE';
+            }
+        }
 
         if (category) {
             params.push(category);
-            query += ` AND category = $${params.length}`;
+            baseCondition += ` AND category = $${params.length}`;
         }
 
         if (state && state !== 'All States' && state !== 'Central') {
             params.push(state);
-            query += ` AND state = $${params.length}`;
+            baseCondition += ` AND state = $${params.length}`;
         } else if (state === 'Central') {
             params.push('Central');
-            query += ` AND state = $${params.length}`;
+            baseCondition += ` AND state = $${params.length}`;
         }
 
         if (startDate) {
             params.push(startDate);
-            query += ` AND release_date >= $${params.length}`;
+            baseCondition += ` AND release_date >= $${params.length}`;
         }
 
         if (endDate) {
             params.push(endDate);
-            query += ` AND release_date <= $${params.length}`;
+            baseCondition += ` AND release_date <= $${params.length}`;
         }
 
-        // Only return visible resources unless include_hidden is true
-        if (include_hidden !== 'true') {
-            query += ' AND is_visible = TRUE';
+        if (searchTerm) {
+            params.push(`%${searchTerm}%`);
+            baseCondition += ` AND title ILIKE $${params.length}`;
         }
 
-        query += ' ORDER BY release_date DESC, created_at DESC';
+        let query: string;
+        let countQuery: string;
+
+        if (isHolidays) {
+            // Grouped Holidays Query - robustly handle string dates and grouping
+            query = `
+                SELECT 
+                    state, 
+                    COALESCE(EXTRACT(YEAR FROM (CASE WHEN effective_date ~ '^\\d{4}-\\d{2}-\\d{2}$' THEN effective_date::DATE ELSE NULL END))::integer, 0) as holiday_year,
+                    COUNT(*)::integer as holiday_count,
+                    BOOL_OR(is_visible) as is_visible,
+                    JSON_AGG(r.* ORDER BY effective_date ASC) as items
+                FROM resources r
+                ${baseCondition}
+                GROUP BY state, holiday_year
+                ORDER BY holiday_year DESC, state ASC
+            `;
+            countQuery = `
+                SELECT COUNT(*) FROM (
+                    SELECT 1 FROM resources r
+                    ${baseCondition}
+                    GROUP BY state, COALESCE(EXTRACT(YEAR FROM (CASE WHEN effective_date ~ '^\\d{4}-\\d{2}-\\d{2}$' THEN effective_date::DATE ELSE NULL END))::integer, 0)
+                ) as grouped_count
+            `;
+        } else {
+            // Standard Flat Query
+            query = `SELECT * FROM resources ${baseCondition} ORDER BY release_date DESC, created_at DESC`;
+            countQuery = `SELECT COUNT(*) FROM resources ${baseCondition}`;
+        }
+
+        // Get total count
+        const totalResult = await pool.query(countQuery, params);
+        const total = parseInt(totalResult.rows[0].count);
+
+        // Add pagination
+        params.push(limitNum);
+        query += ` LIMIT $${params.length}`;
+        params.push(offset);
+        query += ` OFFSET $${params.length}`;
+
         const result = await pool.query(query, params);
-        res.json(result.rows);
+
+        res.json({
+            resources: result.rows,
+            pagination: {
+                total,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(total / limitNum)
+            }
+        });
     } catch (err) {
         console.error('Error fetching resources:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: err instanceof Error ? err.message : String(err) });
     }
 };
 
@@ -83,11 +152,11 @@ export const upsertResource = async (req: Request, res: Response) => {
 
             const updateQuery = `
                 UPDATE resources 
-                SET title = $1, description = $2, release_date = $3, effective_date = $4, 
-                    state = $5, category = $6, download_url = $7, is_visible = $8, public_id = $9
-                WHERE id = $10 
-                RETURNING *
-            `;
+                SET title = $1, description = $2, release_date = $3, effective_date = $4,
+    state = $5, category = $6, download_url = $7, is_visible = $8, public_id = $9
+                WHERE id = $10
+RETURNING *
+    `;
 
             const updateValues = [
                 title, description, safe_release_date, safe_effective_date,
@@ -102,14 +171,14 @@ export const upsertResource = async (req: Request, res: Response) => {
             // Rely on DB 'SERIAL' or 'sequence' for ID generation automatically
 
             const insertQuery = `
-                INSERT INTO resources (
-                    title, description, release_date, effective_date, state,
-                    category, download_url, speaker_name, speaker_role, 
-                    speaker_org, speaker_image, is_visible, public_id
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-                RETURNING *
-            `;
+                INSERT INTO resources(
+        title, description, release_date, effective_date, state,
+        category, download_url, speaker_name, speaker_role,
+        speaker_org, speaker_image, is_visible, public_id
+    )
+VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+RETURNING *
+    `;
 
             const insertValues = [
                 title, description, safe_release_date, safe_effective_date,

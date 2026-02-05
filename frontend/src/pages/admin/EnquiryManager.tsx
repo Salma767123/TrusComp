@@ -56,7 +56,7 @@ interface Enquiry {
     phone: string;
     service_interest: string;
     message: string;
-    status: 'new' | 'contacted' | 'confirmed' | 'closed';
+    status: 'new' | 'contacted' | 'confirmed' | 'closed' | 'cancelled';
     notes: string | null;
     confirmed_at: string | null;
     created_at: string;
@@ -72,7 +72,7 @@ const EnquiryManager = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedService, setSelectedService] = useState<string>("All Services");
-    const [statusFilter, setStatusFilter] = useState<string>("All Statuses");
+    const [statusFilter, setStatusFilter] = useState<string>("Active Leads");
     const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
     const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,6 +88,8 @@ const EnquiryManager = () => {
         service_interest: null as string | null,
         message: null as string | null
     });
+
+    const isLocked = selectedEnquiry?.id !== 0 && selectedEnquiry?.status === 'confirmed';
 
     const isFormValid = () => {
         if (!selectedEnquiry) return false;
@@ -280,7 +282,10 @@ const EnquiryManager = () => {
             e.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             e.phone.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesService = selectedService === "All Services" || e.service_interest === selectedService;
-        const matchesStatus = statusFilter === "All Statuses" || e.status === statusFilter;
+        const matchesStatus =
+            statusFilter === "All Statuses" ? true :
+                statusFilter === "Active Leads" ? (e.status === 'new' || e.status === 'contacted') :
+                    e.status === statusFilter;
 
         let matchesDate = true;
         if (dateFilter) {
@@ -313,6 +318,7 @@ const EnquiryManager = () => {
             case 'contacted': return <Badge className="bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100 font-bold text-[9px] uppercase tracking-wider">Contacted</Badge>;
             case 'confirmed': return <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 font-bold text-[9px] uppercase tracking-wider">Confirmed</Badge>;
             case 'closed': return <Badge className="bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 font-bold text-[9px] uppercase tracking-wider">Closed</Badge>;
+            case 'cancelled': return <Badge className="bg-red-50 text-red-600 border-red-100 hover:bg-red-100 font-bold text-[9px] uppercase tracking-wider">Cancelled</Badge>;
             default: return <Badge variant="outline">{status}</Badge>;
         }
     };
@@ -365,11 +371,13 @@ const EnquiryManager = () => {
                             <SelectValue placeholder="All Statuses" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl border-slate-200 shadow-xl">
-                            <SelectItem value="All Statuses" className="text-xs font-medium">All Statuses</SelectItem>
+                            <SelectItem value="Active Leads" className="text-xs font-bold text-primary">Active Leads</SelectItem>
+                            <SelectItem value="All Statuses" className="text-xs font-medium border-t border-slate-50 mt-1">All Statuses</SelectItem>
                             <SelectItem value="new" className="text-xs font-medium">New</SelectItem>
                             <SelectItem value="contacted" className="text-xs font-medium">Contacted</SelectItem>
                             <SelectItem value="confirmed" className="text-xs font-medium">Confirmed</SelectItem>
                             <SelectItem value="closed" className="text-xs font-medium">Closed</SelectItem>
+                            <SelectItem value="cancelled" className="text-xs font-medium">Cancelled</SelectItem>
                         </SelectContent>
                     </Select>
                     <Popover>
@@ -377,8 +385,9 @@ const EnquiryManager = () => {
                             <Button
                                 variant="outline"
                                 className={cn(
-                                    "h-10 px-3 text-sm font-medium border-slate-200 bg-white hover:bg-slate-100 text-slate-600 gap-2 min-w-[140px] justify-between",
-                                    dateFilter && "border-primary text-primary bg-primary/5"
+                                    "h-10 px-3 text-xs font-bold border-slate-200 bg-white text-slate-600 gap-2 min-w-[140px] justify-between rounded-lg shadow-sm transition-all duration-200",
+                                    !dateFilter && "hover:bg-primary/5 hover:border-primary hover:text-primary",
+                                    dateFilter && "bg-primary border-primary text-white hover:bg-primary hover:border-primary hover:text-white shadow-lg shadow-primary/20"
                                 )}
                             >
                                 <div className="flex items-center gap-2">
@@ -521,24 +530,31 @@ const EnquiryManager = () => {
                                         <div className="flex items-center justify-end gap-1">
                                             <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-blue-500" onClick={() => handleViewModal(enquiry)} title="View Details"><Eye className="w-3.5 h-3.5" /></Button>
 
-                                            {/* Edit Button - Disabled if status is closed */}
+                                            {/* Edit Button - Disabled if status is closed or confirmed */}
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className={cn(
                                                     "h-7 w-7 transition-colors",
-                                                    enquiry.status === 'closed'
+                                                    (enquiry.status === 'closed' || enquiry.status === 'confirmed')
                                                         ? "text-slate-200 cursor-not-allowed hover:bg-transparent hover:text-slate-200"
                                                         : "text-slate-400 hover:text-primary"
                                                 )}
-                                                onClick={() => enquiry.status !== 'closed' && handleOpenModal(enquiry)}
-                                                disabled={enquiry.status === 'closed'}
-                                                title={enquiry.status === 'closed' ? "Cannot edit closed records" : "Edit"}
+                                                onClick={() => {
+                                                    if (enquiry.status === 'closed' || enquiry.status === 'confirmed') return;
+                                                    handleOpenModal(enquiry);
+                                                }}
+                                                disabled={enquiry.status === 'closed' || enquiry.status === 'confirmed'}
+                                                title={
+                                                    enquiry.status === 'closed' ? "Cannot edit closed records" :
+                                                        enquiry.status === 'confirmed' ? "Confirmed enquiries cannot be edited or modified." :
+                                                            "Edit Lead"
+                                                }
                                             >
                                                 <Edit className="w-3.5 h-3.5" />
                                             </Button>
 
-                                            {/* Status Change - Disabled if status is closed */}
+                                            {/* Status Change - Disabled if status is closed or confirmed */}
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <Button
@@ -546,12 +562,16 @@ const EnquiryManager = () => {
                                                         size="icon"
                                                         className={cn(
                                                             "h-7 w-7 transition-colors",
-                                                            enquiry.status === 'closed'
+                                                            (enquiry.status === 'closed' || enquiry.status === 'confirmed')
                                                                 ? "text-slate-200 cursor-not-allowed hover:bg-transparent hover:text-slate-200"
                                                                 : "text-slate-400 hover:text-amber-500"
                                                         )}
-                                                        disabled={enquiry.status === 'closed'}
-                                                        title={enquiry.status === 'closed' ? "Record is closed" : "Change Status"}
+                                                        disabled={enquiry.status === 'closed' || enquiry.status === 'confirmed'}
+                                                        title={
+                                                            enquiry.status === 'closed' ? "Record is closed" :
+                                                                enquiry.status === 'confirmed' ? "Confirmed enquiries cannot be updated" :
+                                                                    "Change Status"
+                                                        }
                                                     >
                                                         <RefreshCw className="w-3.5 h-3.5" />
                                                     </Button>
@@ -562,6 +582,7 @@ const EnquiryManager = () => {
                                                         <button onClick={() => handleChangeStatus(enquiry.id, 'contacted')} className={cn("text-left px-3 py-1.5 text-xs hover:bg-slate-100 rounded transition-colors", enquiry.status === 'contacted' && "bg-blue-50 text-blue-600 font-bold")}>Contacted</button>
                                                         <button onClick={() => handleChangeStatus(enquiry.id, 'confirmed')} className={cn("text-left px-3 py-1.5 text-xs hover:bg-slate-100 rounded transition-colors", enquiry.status === 'confirmed' && "bg-emerald-50 text-emerald-600 font-bold")}>Confirmed</button>
                                                         <button onClick={() => handleChangeStatus(enquiry.id, 'closed')} className={cn("text-left px-3 py-1.5 text-xs hover:bg-slate-100 rounded transition-colors", enquiry.status === 'closed' && "bg-slate-100 text-slate-600 font-bold")}>Closed</button>
+                                                        <button onClick={() => handleChangeStatus(enquiry.id, 'cancelled')} className={cn("text-left px-3 py-1.5 text-xs hover:bg-slate-100 rounded transition-colors", enquiry.status === 'cancelled' && "bg-red-50 text-red-600 font-bold")}>Cancelled</button>
                                                     </div>
                                                 </PopoverContent>
                                             </Popover>
@@ -676,8 +697,12 @@ const EnquiryManager = () => {
                     )}
                     <DialogFooter className="px-6 py-4 bg-slate-50 border-t border-slate-100">
                         <Button variant="ghost" onClick={() => setIsViewModalOpen(false)} className="text-xs font-bold uppercase h-9">Close</Button>
-                        <Button onClick={() => { setIsViewModalOpen(false); handleOpenModal(selectedEnquiry!); }}
-                            className={cn("h-9 px-6 bg-primary text-xs font-bold uppercase", selectedEnquiry?.status === 'closed' ? "hidden" : "flex")}
+                        <Button
+                            onClick={() => { setIsViewModalOpen(false); handleOpenModal(selectedEnquiry!); }}
+                            className={cn(
+                                "h-9 px-6 bg-primary text-xs font-bold uppercase",
+                                (selectedEnquiry?.status === 'closed' || selectedEnquiry?.status === 'confirmed') ? "hidden" : "flex"
+                            )}
                         >
                             <Edit className="w-3.5 h-3.5 mr-2" /> Edit Lead
                         </Button>
@@ -691,11 +716,20 @@ const EnquiryManager = () => {
                     <DialogHeader className="px-6 py-4 bg-slate-900 border-b border-white/10 shrink-0">
                         <DialogTitle className="text-base font-bold text-white tracking-tight flex items-center gap-2">
                             {selectedEnquiry?.id === 0 ? <Plus className="w-4 h-4 text-primary" /> : <Edit className="w-4 h-4 text-primary" />}
-                            {selectedEnquiry?.id === 0 ? "Create Lead" : "Edit Lead Record"}
+                            {selectedEnquiry?.id === 0 ? "Create Lead" : isLocked ? "View Lead Record (Locked)" : "Edit Lead Record"}
                         </DialogTitle>
                     </DialogHeader>
                     {selectedEnquiry && (
                         <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
+                            {isLocked && (
+                                <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-lg flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                    <p className="text-[11px] font-bold text-emerald-700 tracking-wide">
+                                        NOTE: This enquiry is marked as CONFIRMED. All fields are locked and cannot be edited.
+                                    </p>
+                                </div>
+                            )}
+
                             {/* Basic Info */}
                             <div className="space-y-4">
                                 <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 border-b pb-2">
@@ -710,6 +744,7 @@ const EnquiryManager = () => {
                                             onChange={(e) => handleFieldChange('name', e.target.value)}
                                             className={cn("h-9 text-xs font-bold", formErrors.name && "border-red-500")}
                                             placeholder="Lead Name"
+                                            disabled={isLocked}
                                         />
                                         {formErrors.name && <span className="text-[10px] text-red-500 font-bold">{formErrors.name}</span>}
                                     </div>
@@ -720,6 +755,7 @@ const EnquiryManager = () => {
                                             onChange={(e) => handleFieldChange('email', e.target.value)}
                                             className={cn("h-9 text-xs", formErrors.email && "border-red-500")}
                                             placeholder="email@example.com"
+                                            disabled={isLocked}
                                         />
                                         {formErrors.email && <span className="text-[10px] text-red-500 font-bold">{formErrors.email}</span>}
                                     </div>
@@ -730,6 +766,7 @@ const EnquiryManager = () => {
                                             onChange={(e) => handleFieldChange('phone', e.target.value)}
                                             className={cn("h-9 text-xs", formErrors.phone && "border-red-500")}
                                             placeholder="+91 XXXXX XXXXX"
+                                            disabled={isLocked}
                                         />
                                         {formErrors.phone && <span className="text-[10px] text-red-500 font-bold">{formErrors.phone}</span>}
                                     </div>
@@ -738,6 +775,7 @@ const EnquiryManager = () => {
                                         <Select
                                             value={selectedEnquiry.service_interest}
                                             onValueChange={(value) => handleFieldChange('service_interest', value)}
+                                            disabled={isLocked}
                                         >
                                             <SelectTrigger className={cn("h-9 px-3 w-full bg-white border-slate-200 rounded-md text-xs font-medium outline-none focus:ring-1 focus:ring-primary/20 transition-all", formErrors.service_interest && "border-red-500")}>
                                                 <SelectValue placeholder="Select Service" />
@@ -756,6 +794,7 @@ const EnquiryManager = () => {
                                         <Select
                                             value={selectedEnquiry.status}
                                             onValueChange={(value) => setSelectedEnquiry({ ...selectedEnquiry, status: value as any })}
+                                            disabled={isLocked}
                                         >
                                             <SelectTrigger className="h-9 px-3 w-full bg-white border-slate-200 rounded-md text-xs font-medium outline-none focus:ring-1 focus:ring-primary/20 transition-all">
                                                 <SelectValue placeholder="Select Status" />
@@ -765,6 +804,7 @@ const EnquiryManager = () => {
                                                 <SelectItem value="contacted" className="text-xs font-medium">Contacted</SelectItem>
                                                 <SelectItem value="confirmed" className="text-xs font-medium">Confirmed</SelectItem>
                                                 <SelectItem value="closed" className="text-xs font-medium">Closed</SelectItem>
+                                                <SelectItem value="cancelled" className="text-xs font-medium">Cancelled</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -786,6 +826,7 @@ const EnquiryManager = () => {
                                             rows={2}
                                             className={cn("text-xs resize-none bg-slate-50/50", formErrors.message && "border-red-500")}
                                             placeholder="Client's initial message..."
+                                            disabled={isLocked}
                                         />
                                         {formErrors.message && <span className="text-[10px] text-red-500 font-bold">{formErrors.message}</span>}
                                     </div>
@@ -797,6 +838,7 @@ const EnquiryManager = () => {
                                             rows={3}
                                             className="text-xs resize-none bg-slate-50/50"
                                             placeholder="Add updates from your conversation with the lead..."
+                                            disabled={isLocked}
                                         />
                                     </div>
                                 </div>
@@ -825,9 +867,16 @@ const EnquiryManager = () => {
                     )}
                     <DialogFooter className="px-6 py-4 bg-slate-50 border-t border-slate-100">
                         <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="text-xs font-bold uppercase h-9">Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSaving || !isFormValid()} className="h-9 px-8 bg-primary text-xs font-bold uppercase shadow-xl shadow-primary/20">
-                            {isSaving ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <span className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5" /> Save Lead</span>}
-                        </Button>
+                        {!isLocked && (
+                            <Button onClick={handleSave} disabled={isSaving || !isFormValid()} className="h-9 px-8 bg-primary text-xs font-bold uppercase shadow-xl shadow-primary/20">
+                                {isSaving ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <span className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5" /> Save Lead</span>}
+                            </Button>
+                        )}
+                        {isLocked && (
+                            <Button variant="outline" disabled className="h-9 px-8 border-emerald-100 bg-emerald-50 text-emerald-600 text-xs font-bold uppercase cursor-not-allowed">
+                                <CheckCircle2 className="w-3.5 h-3.5 mr-2" /> Record Locked
+                            </Button>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

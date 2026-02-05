@@ -5,6 +5,7 @@ import WhyChooseUs from "@/components/home/WhyChooseUs";
 import ClientLogos from "@/components/home/ClientLogos";
 import FAQSection from "@/components/home/FAQSection";
 import CTASection from "@/components/home/CTASection";
+import NotificationTicker from "@/components/home/NotificationTicker";
 
 import { useSEO } from "@/hooks/useSEO";
 
@@ -13,6 +14,7 @@ const Index = () => {
   return (
     <Layout>
       <HeroSection />
+      <NotificationTicker />
       <LivingComplianceSystem />
       <WhyChooseUs />
       <ClientLogos />

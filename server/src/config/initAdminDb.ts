@@ -269,6 +269,9 @@ const initAdminDb = async () => {
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
+            -- Safe schema updates for labour_law_updates
+            ALTER TABLE labour_law_updates ADD COLUMN IF NOT EXISTS webinar_link TEXT;
+
             -- Seed default categories for services if not exists
             INSERT INTO settings (key, value)
             VALUES ('service_categories', '["Labor law Compliance", "Audit & Verification", "Licensing & Registration", "Industrial Relations", "Payroll & Remittances"]')

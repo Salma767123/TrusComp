@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import pool from '../config/db';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { sendEmail } from '../utils/email';
 
 // PUBLIC: Submit an enquiry
 export const submitEnquiry = async (req: Request, res: Response) => {
@@ -21,6 +22,95 @@ export const submitEnquiry = async (req: Request, res: Response) => {
             message: 'Enquiry submitted successfully',
             data: result.rows[0]
         });
+
+        // Background: Send Admin Notification Email
+        (async () => {
+            try {
+                // 1. Fetch Admin Notification Email from Settings
+                const settingsRes = await pool.query("SELECT value FROM settings WHERE key = 'admin_account_email'");
+
+                // key might store raw string or JSONB. Based on settings controller, it's inserted as JSONB.
+                // If it's a string, it might be stored as "email@example.com" (with quotes) or raw if not stringified.
+                // Based on settings.controller.ts line 159, strings are JSON.stringified.
+                let adminEmail = settingsRes.rows[0]?.value;
+                if (typeof adminEmail === 'string' && adminEmail.startsWith('"')) {
+                    try { adminEmail = JSON.parse(adminEmail); } catch (e) { }
+                }
+
+                if (!adminEmail) {
+                    console.log('Skipping admin notification: admin_account_email not configured.');
+                    return;
+                }
+
+                // 2. Prepare HTML Template
+                const dateString = new Date().toLocaleString('en-IN', {
+                    timeZone: 'Asia/Kolkata',
+                    dateStyle: 'long',
+                    timeStyle: 'short'
+                });
+
+                const emailHtml = `
+                    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
+                        <div style="background-color: #f97316; padding: 24px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 20px; text-transform: uppercase; tracking: 1px;">New Enquiry Received</h1>
+                        </div>
+                        <div style="padding: 32px; color: #1e293b; line-height: 1.6;">
+                            <p style="margin-top: 0; font-size: 16px;">Hello Admin,</p>
+                            <p style="font-size: 14px; color: #64748b;">A new enquiry has been submitted through the TrusComp website. Here are the details:</p>
+                            
+                            <div style="margin: 24px 0; background-color: #f8fafc; border-radius: 8px; padding: 20px; border-left: 4px solid #f97316;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 13px; font-weight: bold; color: #64748b; width: 140px; vertical-align: top;">Name:</td>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #1e293b;">${name}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 13px; font-weight: bold; color: #64748b; vertical-align: top;">Email:</td>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #1e293b;">
+                                            <a href="mailto:${email}" style="color: #f97316; text-decoration: none;">${email}</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 13px; font-weight: bold; color: #64748b; vertical-align: top;">Mobile Number:</td>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #1e293b;">${phone}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 13px; font-weight: bold; color: #64748b; vertical-align: top;">Service Interest:</td>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #1e293b;">${service_interest}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; font-size: 13px; font-weight: bold; color: #64748b; vertical-align: top;">Submission Time:</td>
+                                        <td style="padding: 8px 0; font-size: 14px; color: #1e293b;">${dateString} (IST)</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div style="margin-bottom: 24px;">
+                                <p style="font-size: 13px; font-weight: bold; color: #64748b; margin-bottom: 8px;">Message:</p>
+                                <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; font-size: 14px; color: #334155; font-style: italic;">
+                                    ${message || 'No message provided.'}
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; margin-top: 32px;">
+                                <a href="http://truscomp.com/admin" style="display: inline-block; background-color: #0f172a; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: bold;">View in Admin Dashboard</a>
+                            </div>
+                        </div>
+                        <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0; font-size: 11px; color: #94a3b8;">&copy; ${new Date().getFullYear()} TrusComp. All rights reserved.</p>
+                            <p style="margin: 4px 0 0; font-size: 10px; color: #cbd5e1;">This is an automated notification. Please do not reply directly to this email.</p>
+                        </div>
+                    </div>
+                `;
+
+                // 3. Send Email
+                await sendEmail(adminEmail, 'New Enquiry Received – TrusComp Website', emailHtml);
+                console.log(`Admin notification email sent to ${adminEmail} for enquiry from ${name}`);
+            } catch (emailErr: any) {
+                // Log failure silently as per requirements
+                console.error('Silent failure sending admin notification email:', emailErr.message);
+            }
+        })();
     } catch (err: any) {
         console.error('Error submitting enquiry:', err);
         res.status(500).json({ message: 'Internal server error', error: err.message });
@@ -68,11 +158,17 @@ export const updateEnquiry = async (req: AuthRequest, res: Response) => {
     const { name, email, phone, service_interest, message, status, notes } = req.body;
 
     try {
-        // Fetch current status to see if it's changing to confirmed
+        // Fetch current status to see if it's changing or if it's already locked
         const currentRes = await pool.query('SELECT status, confirmed_at FROM enquiries WHERE id = $1', [id]);
         if (currentRes.rowCount === 0) return res.status(404).json({ message: 'Enquiry not found' });
 
         const currentEnquiry = currentRes.rows[0];
+
+        // Status Locking: confirmed enquiries cannot be modified
+        if (currentEnquiry.status === 'confirmed') {
+            return res.status(403).json({ message: 'Confirmed enquiries cannot be edited or modified.' });
+        }
+
         let confirmed_at = currentEnquiry.confirmed_at;
 
         if (status === 'confirmed' && currentEnquiry.status !== 'confirmed') {
@@ -100,12 +196,20 @@ export const updateEnquiryStatus = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['new', 'contacted', 'confirmed', 'closed'];
+    const validStatuses = ['new', 'contacted', 'confirmed', 'closed', 'cancelled'];
     if (!validStatuses.includes(status)) {
         return res.status(400).json({ message: 'Invalid status' });
     }
 
     try {
+        // Fetch current status to check locking
+        const currentRes = await pool.query('SELECT status FROM enquiries WHERE id = $1', [id]);
+        if (currentRes.rowCount === 0) return res.status(404).json({ message: 'Enquiry not found' });
+
+        if (currentRes.rows[0].status === 'confirmed') {
+            return res.status(403).json({ message: 'Confirmed enquiries cannot be edited or modified.' });
+        }
+
         // Set confirmed_at to current date if status is 'confirmed', null otherwise
         const confirmed_at = status === 'confirmed' ? new Date() : null;
 

@@ -1,9 +1,18 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Download, Play, Calendar, FileText, CheckCircle2, User, ChevronRight, ArrowRight } from "lucide-react";
+import { ArrowLeft, Download, Play, Calendar, FileText, CheckCircle2, User, ChevronRight, ArrowRight, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
 import { useState, useEffect } from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { useSEO } from "@/hooks/useSEO";
 
@@ -17,6 +26,7 @@ interface LabourLawUpdate {
     speaker_role: string | null;
     speaker_org: string | null;
     speaker_image: string | null;
+    webinar_link: string | null;
     documents: Array<{ title: string; description: string; url: string }>;
     videos: Array<{ title: string; url: string }>;
 }
@@ -31,6 +41,11 @@ const MonthlyLabourLawDetail = () => {
     const navigate = useNavigate();
     const [resource, setResource] = useState<LabourLawUpdate | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+
+    const isRegistrationExpired = resource?.end_date
+        ? new Date(new Date().setHours(0, 0, 0, 0)) > new Date(new Date(resource.end_date).setHours(0, 0, 0, 0))
+        : false;
 
     useEffect(() => {
         const fetchUpdate = async () => {
@@ -169,32 +184,57 @@ const MonthlyLabourLawDetail = () => {
                                 )}
                             </div>
 
-                            {/* Right Content: CTA conversion focus */}
                             <div className="lg:col-span-4 flex flex-col items-center lg:items-end justify-center">
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="relative group"
-                                >
-                                    <div className="absolute -inset-1 bg-[#FF8C00] rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200 animate-pulse-slow"></div>
-                                    <button
-                                        onClick={() => { }}
-                                        className="relative flex items-center justify-center gap-3 w-full sm:w-auto px-8 py-5 bg-[#FF8C00] text-white text-lg font-bold rounded-xl shadow-xl shadow-orange-900/40 hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                                    >
-                                        Register Now
-                                        <ChevronRight className="w-5 h-5 stroke-[2.5]" />
-                                    </button>
-                                </motion.div>
-                                <p className="mt-4 text-sm text-gray-400 text-center lg:text-right">
-                                    Limited seats available for the live session.
-                                </p>
+                                {resource.webinar_link && (
+                                    <>
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: 0.4 }}
+                                            className="relative group w-full sm:w-auto"
+                                        >
+                                            {!isRegistrationExpired && (
+                                                <div className="absolute -inset-1 bg-[#FF8C00] rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-200 animate-pulse-slow"></div>
+                                            )}
+
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <button
+                                                            onClick={() => !isRegistrationExpired && setIsRegisterModalOpen(true)}
+                                                            disabled={isRegistrationExpired}
+                                                            className={cn(
+                                                                "relative flex items-center justify-center gap-3 w-full sm:w-auto px-8 py-5 text-white text-lg font-bold rounded-xl transition-all shadow-xl",
+                                                                isRegistrationExpired
+                                                                    ? "bg-gray-500 cursor-not-allowed shadow-none"
+                                                                    : "bg-[#FF8C00] shadow-orange-900/40 hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98]"
+                                                            )}
+                                                        >
+                                                            Register Now
+                                                            <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    {isRegistrationExpired && (
+                                                        <TooltipContent className="bg-slate-900 border-white/10 text-white px-4 py-2 font-bold">
+                                                            <p>Registration Closed</p>
+                                                        </TooltipContent>
+                                                    )}
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        </motion.div>
+                                        <p className="mt-4 text-sm text-gray-400 text-center lg:text-right">
+                                            {isRegistrationExpired
+                                                ? "Registration for this session has ended."
+                                                : "Limited seats available for the live session."}
+                                        </p>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* 2. Enhanced Resource Materials Section */}
+                {/* 2. Enhanced Resource Materials Section - Redesigned List UI */}
                 <section className="relative py-20 bg-gray-50 overflow-hidden">
                     {/* Subtle animated background */}
                     <div className="absolute inset-0 pointer-events-none">
@@ -206,49 +246,62 @@ const MonthlyLabourLawDetail = () => {
                         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,140,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,140,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)]" />
                     </div>
 
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                         <div className="mb-10 border-l-4 border-[#FF8C00] pl-6">
                             <h2 className="text-3xl font-bold text-gray-900 mb-2">Resource Materials</h2>
                             <p className="text-gray-600">Download curated compliance documents and reference materials</p>
                         </div>
 
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="flex flex-col gap-4">
                             {resource.documents && resource.documents.length > 0 ? (
                                 resource.documents.map((doc, i) => (
                                     <motion.div
                                         key={i}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
                                         viewport={{ once: true }}
                                         transition={{ delay: i * 0.1 }}
-                                        whileHover={{ y: -8, boxShadow: "0 20px 40px -10px rgba(255, 140, 0, 0.15)" }}
-                                        className="group bg-white p-6 rounded-2xl border border-gray-100 hover:border-orange-200 transition-all duration-300 relative overflow-hidden"
+                                        whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}
+                                        className="group relative flex flex-col md:flex-row items-start md:items-center gap-6 p-5 bg-white/60 backdrop-blur-md rounded-2xl border border-white/60 shadow-sm hover:shadow-md hover:border-orange-200/50 transition-all duration-300"
                                     >
-                                        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                            <FileText className="w-24 h-24 text-[#FF8C00] -rotate-12 transform translate-x-4 -translate-y-4" />
-                                        </div>
-                                        <div className="flex justify-between items-start mb-6 relative">
-                                            <div className="p-3 bg-orange-50 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                        {/* Icon Container */}
+                                        <div className="flex-shrink-0">
+                                            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                                 <FileText className="w-6 h-6 text-[#FF8C00]" />
                                             </div>
-                                            <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase border border-gray-100 px-2 py-1 rounded-md bg-white">PDF</span>
                                         </div>
-                                        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-[#FF8C00] transition-colors relative">
-                                            {doc.title}
-                                        </h3>
-                                        <p className="text-sm text-gray-500 mb-6 relative">{doc.description}</p>
-                                        <button
-                                            onClick={() => window.open(doc.url, '_blank')}
-                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border border-transparent rounded-xl text-sm font-semibold text-gray-700 group-hover:bg-[#FF8C00] group-hover:text-white transition-all relative overflow-hidden"
-                                        >
-                                            <span className="relative z-10 flex items-center gap-2">Download Now <Download className="w-4 h-4" /></span>
-                                        </button>
+
+                                        {/* Content Area */}
+                                        <div className="flex-grow min-w-0 space-y-1">
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#FF8C00] transition-colors line-clamp-1">
+                                                    {doc.title}
+                                                </h3>
+                                                <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 border border-gray-200">
+                                                    PDF
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-500 line-clamp-2 md:line-clamp-1 leading-relaxed">
+                                                {doc.description}
+                                            </p>
+                                        </div>
+
+                                        {/* Action Area */}
+                                        <div className="flex-shrink-0 w-full md:w-auto mt-2 md:mt-0">
+                                            <button
+                                                onClick={() => window.open(doc.url, '_blank')}
+                                                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-[#FF8C00] hover:text-white hover:border-[#FF8C00] transition-all group-active:scale-[0.98]"
+                                            >
+                                                <span>Download</span>
+                                                <Download className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </motion.div>
                                 ))
                             ) : (
-                                <div className="col-span-full text-center py-12 text-gray-400">
-                                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                                    <p>No documents available for this update.</p>
+                                <div className="text-center py-16 bg-white/40 rounded-3xl border border-dashed border-gray-200">
+                                    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                                    <p className="text-gray-400 font-medium">No documents available at the moment.</p>
                                 </div>
                             )}
                         </div>
@@ -396,6 +449,53 @@ const MonthlyLabourLawDetail = () => {
                 </section>
             </main>
             <Footer />
+
+            {/* Registration Modal */}
+            <Dialog open={isRegisterModalOpen} onOpenChange={setIsRegisterModalOpen}>
+                <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white rounded-2xl overflow-hidden shadow-2xl">
+                    <DialogHeader className="pt-8 px-6 pb-2">
+                        <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+                            <div className="w-10 h-10 bg-[#FF8C00]/20 rounded-xl flex items-center justify-center">
+                                <Sparkles className="w-6 h-6 text-[#FF8C00]" />
+                            </div>
+                            Webinar Registration
+                        </DialogTitle>
+                        <DialogDescription className="text-gray-400 text-base mt-2">
+                            Secure your spot for the <span className="text-white font-semibold">"{resource.title}"</span> session.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="p-6 space-y-6">
+                        <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 bg-[#FF8C00] rounded-full animate-pulse" />
+                                <span className="text-sm font-medium text-gray-300 uppercase tracking-widest">Live Interactive Session</span>
+                            </div>
+                            <p className="text-sm text-gray-400 leading-relaxed">
+                                Join our experts for an in-depth discussion on the latest labour law updates and compliance strategies.
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => {
+                                    window.open(resource.webinar_link || '', '_blank');
+                                    setIsRegisterModalOpen(false);
+                                }}
+                                className="w-full py-4 bg-[#FF8C00] text-white font-bold rounded-xl shadow-lg shadow-orange-900/20 hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                            >
+                                {resource.webinar_link?.includes('zoom') || resource.webinar_link?.includes('meet.google')
+                                    ? "Open Meeting Link"
+                                    : "Complete Registration"}
+                                <ArrowRight className="w-5 h-5" />
+                            </button>
+                            <p className="text-center text-[11px] text-gray-500 italic">
+                                Clicking will open the registration page in a new tab safely.
+                            </p>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div >
     );
 };

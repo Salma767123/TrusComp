@@ -7,13 +7,13 @@ import ComplianceUpdatesButton from "./ComplianceUpdatesButton";
 
 const HeroSection = () => {
   return (
-    <section className="relative overflow-hidden min-h-[90vh] flex items-center bg-gradient-to-br from-background via-secondary/20 to-background">
+    <section className="relative overflow-hidden min-h-[70vh] flex items-center bg-gradient-to-br from-background via-secondary/20 to-background">
       <FloatingShapes variant="hero" />
 
       {/* Animated gradient border at top */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-warning to-primary bg-[length:200%_100%] animate-shimmer" />
 
-      <div className="section-container relative py-16 lg:py-24">
+      <div className="section-container relative py-2 lg:py-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Content */}
           <div className="space-y-8">

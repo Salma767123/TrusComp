@@ -128,7 +128,7 @@ export default {
         "fade-in": "fade-in 0.5s ease-out forwards",
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         "scale-in": "scale-in 0.3s ease-out forwards",
-        "pulse-glow": "pulse-glow 2s infinite",
+        "pulse-glow": "pulse-glow 3.5s ease-in-out infinite",
         "count-up": "count-up 0.8s ease-out forwards",
         "float": "float 3s ease-in-out infinite",
         "draw": "draw 1.5s ease-out forwards",

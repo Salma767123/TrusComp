@@ -61,6 +61,14 @@ interface Resource {
     public_id?: string;
 }
 
+interface GroupedHoliday {
+    state: string;
+    holiday_year: number;
+    holiday_count: number;
+    is_visible: boolean;
+    items: Resource[];
+}
+
 const CATEGORIES = [
     { id: 'Acts', label: 'Acts', icon: Scale },
     { id: 'Forms', label: 'Forms', icon: FileText },
@@ -84,9 +92,35 @@ const STATES = [
 ];
 
 const ResourceManager = () => {
-    const [resources, setResources] = useState<Resource[]>([]);
+    const [resources, setResources] = useState<any[]>([]); // Can be Resource[] or GroupedHoliday[]
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [statusFilter, setStatusFilter] = useState("active");
+    const itemsPerPage = 7;
+
+    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+    const toggleGroup = (groupKey: string) => {
+        const newExpanded = new Set(expandedGroups);
+        if (newExpanded.has(groupKey)) {
+            newExpanded.delete(groupKey);
+        } else {
+            newExpanded.add(groupKey);
+        }
+        setExpandedGroups(newExpanded);
+    };
+
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     // Initialize activeTab from URL param if present, otherwise default to first category
     const [activeTab, setActiveTab] = useState(() => {
@@ -109,6 +143,82 @@ const ResourceManager = () => {
 
     const [isSaving, setIsSaving] = useState(false);
 
+    // Date Picker Input States
+    const [releaseInput, setReleaseInput] = useState("");
+    const [effectiveInput, setEffectiveInput] = useState("");
+    const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
+
+    const CustomCalendarCaption = ({ displayMonth }: CaptionProps) => {
+        const { goToMonth, nextMonth, previousMonth } = useNavigation();
+        const startYear = 1940;
+        const currentYear = new Date().getFullYear();
+        const endYear = currentYear + 30;
+        const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
+        const months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        const handleMonthChange = (value: string) => {
+            const newMonth = new Date(displayMonth);
+            newMonth.setMonth(months.indexOf(value));
+            goToMonth?.(newMonth);
+        };
+
+        const handleYearChange = (value: string) => {
+            const newMonth = new Date(displayMonth);
+            newMonth.setFullYear(parseInt(value));
+            goToMonth?.(newMonth);
+        };
+
+        return (
+            <div className="flex items-center justify-between pt-1 relative px-1">
+                <div className="flex items-center gap-1">
+                    <Select value={months[displayMonth.getMonth()]} onValueChange={handleMonthChange}>
+                        <SelectTrigger className="h-7 w-[100px] text-xs font-medium border-0 shadow-none hover:bg-slate-100 focus:ring-0 px-2 gap-1 bg-transparent">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                            {months.map((month) => (
+                                <SelectItem key={month} value={month} className="text-xs">{month}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select value={displayMonth.getFullYear().toString()} onValueChange={handleYearChange}>
+                        <SelectTrigger className="h-7 w-[70px] text-xs font-medium border-0 shadow-none hover:bg-slate-100 focus:ring-0 px-2 gap-1 bg-transparent">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                            {years.map((year) => (
+                                <SelectItem key={year} value={year.toString()} className="text-xs">{year}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-slate-500 hover:text-slate-900"
+                        onClick={() => previousMonth && goToMonth?.(previousMonth)}
+                        disabled={!previousMonth}
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-slate-500 hover:text-slate-900"
+                        onClick={() => nextMonth && goToMonth?.(nextMonth)}
+                        disabled={!nextMonth}
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </div>
+            </div>
+        );
+    };
+
     // Filters
     const [filterState, setFilterState] = useState("All States");
     const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -121,7 +231,12 @@ const ResourceManager = () => {
             window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
         }
         fetchResources();
-    }, [activeTab, filterState, dateRange]);
+    }, [activeTab, filterState, dateRange, debouncedSearch, statusFilter, currentPage]);
+
+    // Reset to page 1 when filters or search change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, filterState, dateRange, debouncedSearch, statusFilter]);
 
     const fetchResources = async () => {
         setLoading(true);
@@ -129,36 +244,21 @@ const ResourceManager = () => {
             const params = new URLSearchParams();
             params.append('include_hidden', 'true');
             if (activeTab) params.append('category', activeTab);
-            // ...
-            // Fix Calendar Lint Error by separating conditional render 
-            <div className="border border-slate-200 rounded-lg p-2 flex justify-center bg-slate-50">
-                {selectedResource ? (
-                    <CalendarComponent
-                        mode="single"
-                        selected={holidayDates?.[0]}
-                        onSelect={(date) => setHolidayDates(date ? [date] : [])}
-                        className="rounded-md border-0"
-                    />
-                ) : (
-                    <CalendarComponent
-                        mode="multiple"
-                        selected={holidayDates}
-                        onSelect={setHolidayDates}
-                        className="rounded-md border-0"
-                    />
-                )}
-            </div>
             if (filterState !== "All States") params.append('state', filterState);
             if (dateRange?.from) params.append('startDate', format(dateRange.from, 'yyyy-MM-dd'));
             if (dateRange?.to) params.append('endDate', format(dateRange.to, 'yyyy-MM-dd'));
+            if (debouncedSearch) params.append('searchTerm', debouncedSearch);
+            if (statusFilter) params.append('status', statusFilter);
+            params.append('page', currentPage.toString());
+            params.append('limit', itemsPerPage.toString());
 
             const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-            const response = await authenticatedFetch(`${apiBase}/resources?${params.toString()}`, {
-                // credentials: 'include'
-            });
+            const response = await authenticatedFetch(`${apiBase}/resources?${params.toString()}`);
             if (response.ok) {
                 const data = await response.json();
-                setResources(data);
+                setResources(data.resources);
+                setTotalCount(data.pagination.total);
+                setTotalPages(data.pagination.totalPages);
             }
         } catch (err) {
             toast.error("Connection failed");
@@ -225,18 +325,23 @@ const ResourceManager = () => {
 
         if (resource) {
             setSelectedResource({ ...resource });
+            setReleaseInput(resource.release_date || "");
+            setEffectiveInput(resource.effective_date || "");
         } else {
+            const today = new Date().toISOString().split('T')[0];
             setSelectedResource({
                 id: 0,
                 title: "",
                 category: activeTab,
                 description: "",
                 download_url: "",
-                release_date: new Date().toISOString().split('T')[0],
+                release_date: today,
                 effective_date: "",
                 state: "Central",
                 is_visible: true
             });
+            setReleaseInput(today);
+            setEffectiveInput("");
         }
         setIsModalOpen(true);
     };
@@ -346,14 +451,47 @@ const ResourceManager = () => {
     };
 
     const handleToggleVisibility = async (resource: Resource) => {
-        const updatedResource = { ...resource, is_visible: !resource.is_visible };
-        setResources(prev => prev.map(r => r.id === resource.id ? updatedResource : r)); // Optimistic
+        const id = resource.id;
+        const newVisible = !resource.is_visible;
+
+        // Prevent double click
+        if (togglingIds.has(id)) return;
+
+        // Track toggling state
+        setTogglingIds(prev => new Set(prev).add(id));
+
+        // Optimistic Update
+        setResources(prev => {
+            if (activeTab === 'Holidays List') {
+                return (prev as GroupedHoliday[]).map(group => ({
+                    ...group,
+                    items: group.items.map(r => r.id === id ? { ...r, is_visible: newVisible } : r)
+                }));
+            }
+            return (prev as Resource[]).map(r => r.id === id ? { ...r, is_visible: newVisible } : r);
+        });
 
         try {
-            await upsertResource(updatedResource);
+            await upsertResource({ ...resource, is_visible: newVisible });
+            toast.success(`Visibility ${newVisible ? 'enabled' : 'disabled'} successfully`);
         } catch (err) {
-            setResources(prev => prev.map(r => r.id === resource.id ? resource : r)); // Revert
+            // Revert on failure
+            setResources(prev => {
+                if (activeTab === 'Holidays List') {
+                    return (prev as GroupedHoliday[]).map(group => ({
+                        ...group,
+                        items: group.items.map(r => r.id === id ? resource : r)
+                    }));
+                }
+                return (prev as Resource[]).map(r => r.id === id ? resource : r);
+            });
             toast.error("Failed to update visibility");
+        } finally {
+            setTogglingIds(prev => {
+                const next = new Set(prev);
+                next.delete(id);
+                return next;
+            });
         }
     };
 
@@ -363,9 +501,6 @@ const ResourceManager = () => {
         setSearchTerm("");
     };
 
-    const filteredResources = resources.filter(r =>
-        r.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
 
@@ -388,7 +523,7 @@ const ResourceManager = () => {
             </div>
 
             {/* Category Tabs */}
-            <div className="sticky top-0 z-20 bg-slate-50/95 backdrop-blur pt-2 pb-1 -mx-2 px-2">
+            <div className="shrink-0 bg-slate-50/95 pt-2 pb-1 -mx-2 px-2">
                 <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-sm flex items-center overflow-x-auto no-scrollbar gap-1">
                     {CATEGORIES.map((cat) => (
                         <button
@@ -426,10 +561,15 @@ const ResourceManager = () => {
                 <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto">
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className={cn(
-                                "h-9 border-slate-200 text-xs font-medium justify-start text-left font-normal",
-                                !dateRange?.from && "text-slate-500"
-                            )}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className={cn(
+                                    "h-9 px-3 text-xs font-bold border-slate-200 bg-white text-slate-600 gap-2 rounded-lg shadow-sm transition-all duration-200",
+                                    !dateRange?.from && "hover:bg-primary/5 hover:border-primary hover:text-primary",
+                                    dateRange?.from && "bg-primary border-primary text-white hover:bg-primary hover:border-primary hover:text-white shadow-lg shadow-primary/20"
+                                )}
+                            >
                                 <Calendar className="mr-2 h-3.5 w-3.5" />
                                 {dateRange?.from ? (
                                     dateRange.to ? `${format(dateRange.from, "LLL dd")} - ${format(dateRange.to, "LLL dd")}` : format(dateRange.from, "LLL dd, y")
@@ -446,74 +586,7 @@ const ResourceManager = () => {
                                 numberOfMonths={1}
                                 className="p-3"
                                 components={{
-                                    Caption: ({ displayMonth }: CaptionProps) => {
-                                        const { goToMonth, nextMonth, previousMonth } = useNavigation();
-                                        const currentYear = new Date().getFullYear();
-                                        const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i);
-                                        const months = [
-                                            "January", "February", "March", "April", "May", "June",
-                                            "July", "August", "September", "October", "November", "December"
-                                        ];
-
-                                        const handleMonthChange = (value: string) => {
-                                            const newMonth = new Date(displayMonth);
-                                            newMonth.setMonth(months.indexOf(value));
-                                            goToMonth?.(newMonth);
-                                        };
-
-                                        const handleYearChange = (value: string) => {
-                                            const newMonth = new Date(displayMonth);
-                                            newMonth.setFullYear(parseInt(value));
-                                            goToMonth?.(newMonth);
-                                        };
-
-                                        return (
-                                            <div className="flex items-center justify-between pt-1 relative px-1">
-                                                <div className="flex items-center gap-1">
-                                                    <Select value={months[displayMonth.getMonth()]} onValueChange={handleMonthChange}>
-                                                        <SelectTrigger className="h-7 w-[100px] text-xs font-medium border-0 shadow-none hover:bg-slate-100 focus:ring-0 px-2 gap-1">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="max-h-[200px]">
-                                                            {months.map((month) => (
-                                                                <SelectItem key={month} value={month} className="text-xs">{month}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <Select value={displayMonth.getFullYear().toString()} onValueChange={handleYearChange}>
-                                                        <SelectTrigger className="h-7 w-[70px] text-xs font-medium border-0 shadow-none hover:bg-slate-100 focus:ring-0 px-2 gap-1">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent className="max-h-[200px]">
-                                                            {years.map((year) => (
-                                                                <SelectItem key={year} value={year.toString()} className="text-xs">{year}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-7 w-7 text-slate-500 hover:text-slate-900"
-                                                        onClick={() => previousMonth && goToMonth?.(previousMonth)}
-                                                        disabled={!previousMonth}
-                                                    >
-                                                        <ChevronLeft className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-7 w-7 text-slate-500 hover:text-slate-900"
-                                                        onClick={() => nextMonth && goToMonth?.(nextMonth)}
-                                                        disabled={!nextMonth}
-                                                    >
-                                                        <ChevronRight className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        );
-                                    }
+                                    Caption: CustomCalendarCaption
                                 }}
                             />
                         </PopoverContent>
@@ -528,6 +601,17 @@ const ResourceManager = () => {
                         </SelectContent>
                     </Select>
 
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="h-9 w-[100px] text-xs font-bold bg-white border-slate-200 rounded-lg focus:ring-4 focus:ring-primary/5 text-slate-600 shadow-sm transition-all hover:border-slate-300">
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                            <SelectItem value="active" className="text-xs font-bold text-primary">Active</SelectItem>
+                            <SelectItem value="all" className="text-xs font-medium border-t border-slate-50 mt-1">All Status</SelectItem>
+                            <SelectItem value="inactive" className="text-xs font-medium">Inactive</SelectItem>
+                        </SelectContent>
+                    </Select>
+
                     {
                         (filterState !== "All States" || dateRange?.from || searchTerm) && (
                             <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 w-9 p-0 text-slate-400 hover:text-red-500">
@@ -538,17 +622,17 @@ const ResourceManager = () => {
                 </div >
             </div >
 
-            {/* Content Table */}
-            < div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" >
+            {/* Content Table Container with Fixed Height */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <table className="w-full text-left border-collapse table-fixed">
                     <thead>
                         <tr className="bg-slate-50 border-b border-slate-200">
                             {activeTab === 'Holidays List' ? (
                                 <>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">Date</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[10%]">Day</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[40%]">Holiday Name</th>
-                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">State</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">Year</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[35%]">State Name</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">Holidays</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">Status</th>
                                 </>
                             ) : (
                                 <>
@@ -556,64 +640,192 @@ const ResourceManager = () => {
                                     <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">Released</th>
                                     <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">Effective</th>
                                     <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[15%]">State</th>
+                                    <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[10%]">Status</th>
                                 </>
                             )}
-                            <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest w-[10%]">Status</th>
                             <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right w-[10%]">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {loading ? (
-                            <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2"><RotateCw className="w-4 h-4 animate-spin" /> Loading...</td></tr>
-                        ) : filteredResources.length > 0 ? (
-                            filteredResources.map((resource) => (
-                                <tr key={resource.id} className="hover:bg-slate-50/80 transition-colors">
-                                    {activeTab === 'Holidays List' ? (
-                                        <>
-                                            <td className="px-4 py-3 text-xs font-medium text-slate-900">
-                                                {(() => {
-                                                    try {
-                                                        const d = new Date(resource.effective_date);
-                                                        return isNaN(d.getTime()) ? "-" : format(d, "MMM dd, yyyy");
-                                                    } catch (e) { return "-"; }
-                                                })()}
-                                            </td>
-                                            <td className="px-4 py-3 text-xs text-slate-500">
-                                                {(() => {
-                                                    try {
-                                                        const d = new Date(resource.effective_date);
-                                                        return isNaN(d.getTime()) ? "-" : format(d, "EEEE");
-                                                    } catch (e) { return "-"; }
-                                                })()}
-                                            </td>
-                                            <td className="px-4 py-3 text-xs font-semibold text-slate-900">{resource.title}</td>
-                                            <td className="px-4 py-3"><Badge variant="outline" className="text-[10px]">{resource.state}</Badge></td>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <td className="px-4 py-3"><p className="font-semibold text-slate-900 text-xs line-clamp-1" title={resource.title}>{resource.title}</p></td>
-                                            <td className="px-4 py-3 text-xs text-slate-600 font-medium">{resource.release_date}</td>
-                                            <td className="px-4 py-3 text-xs text-slate-600 font-medium">{resource.effective_date}</td>
-                                            <td className="px-4 py-3"><Badge variant="outline" className="text-[10px]">{resource.state}</Badge></td>
-                                        </>
-                                    )}
-                                    <td className="px-4 py-3">
-                                        <Switch checked={resource.is_visible} onCheckedChange={() => handleToggleVisibility(resource)} className="scale-75 data-[state=checked]:bg-emerald-500" />
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary" onClick={() => handleOpenModal(resource)}><Edit className="w-3.5 h-3.5" /></Button>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500" onClick={() => handleDelete(resource.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
+                            <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-xs"><div className="flex items-center justify-center gap-2 h-full"><RotateCw className="w-4 h-4 animate-spin" /> Loading...</div></td></tr>
+                        ) : resources.length > 0 ? (
+                            resources.map((item, index) => {
+                                if (activeTab === 'Holidays List') {
+                                    const group = item as GroupedHoliday;
+                                    // Robust key to prevent crashes if year is missing
+                                    const groupKey = `${group.state || 'Unknown'}-${group.holiday_year || index}`;
+                                    const isExpanded = expandedGroups.has(groupKey);
+
+                                    return (
+                                        <React.Fragment key={groupKey}>
+                                            <tr
+                                                className="hover:bg-slate-50 transition-colors cursor-pointer"
+                                                onClick={() => toggleGroup(groupKey)}
+                                            >
+                                                <td className="px-4 py-3 text-xs font-bold text-slate-900">
+                                                    {group.holiday_year > 0 ? group.holiday_year : "Unknown"}
+                                                </td>
+                                                <td className="px-4 py-3 font-semibold text-slate-900 text-xs">{group.state || "Central"}</td>
+                                                <td className="px-4 py-3 text-xs text-slate-600 font-medium">
+                                                    {group.holiday_count || 0} {group.holiday_count === 1 ? "Holiday" : "Holidays"}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <Badge variant={group.is_visible ? "default" : "secondary"} className={cn("text-[10px]", group.is_visible ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-50 text-slate-500 border-slate-100")}>
+                                                        {group.is_visible ? "Active" : "Hidden"}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400">
+                                                        {isExpanded ? <ChevronLeft className="w-4 h-4 -rotate-90" /> : <ChevronRight className="w-4 h-4" />}
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                            {isExpanded && (
+                                                <tr className="bg-slate-50/50">
+                                                    <td colSpan={5} className="p-0">
+                                                        <div className="px-4 py-2 border-l-2 border-primary/20 ml-4 my-2">
+                                                            <table className="w-full text-left border-collapse bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                                                                <thead className="bg-slate-50 border-b border-slate-200">
+                                                                    <tr>
+                                                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase w-[15%]">Date</th>
+                                                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase w-[15%]">Day</th>
+                                                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase w-[40%]">Holiday Name</th>
+                                                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase w-[15%] text-center">Status</th>
+                                                                        <th className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase w-[15%] text-right pr-4">Actions</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-slate-100">
+                                                                    {group.items.map((holiday) => (
+                                                                        <tr key={holiday.id} className="hover:bg-slate-50/80 transition-colors h-[48px]">
+                                                                            <td className="px-3 py-2 text-xs font-medium text-slate-900">
+                                                                                {(() => {
+                                                                                    try {
+                                                                                        const d = new Date(holiday.effective_date);
+                                                                                        return isNaN(d.getTime()) ? "-" : format(d, "MMM dd, yyyy");
+                                                                                    } catch (e) { return "-"; }
+                                                                                })()}
+                                                                            </td>
+                                                                            <td className="px-3 py-2 text-xs text-slate-500">
+                                                                                {(() => {
+                                                                                    try {
+                                                                                        const d = new Date(holiday.effective_date);
+                                                                                        return isNaN(d.getTime()) ? "-" : format(d, "EEEE");
+                                                                                    } catch (e) { return "-"; }
+                                                                                })()}
+                                                                            </td>
+                                                                            <td className="px-3 py-2 text-xs font-semibold text-slate-900 line-clamp-1">{holiday.title}</td>
+                                                                            <td className="px-3 py-2 text-center">
+                                                                                <Switch
+                                                                                    checked={holiday.is_visible}
+                                                                                    onCheckedChange={() => handleToggleVisibility(holiday)}
+                                                                                    disabled={togglingIds.has(holiday.id)}
+                                                                                    className="scale-75 data-[state=checked]:bg-emerald-500"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="px-3 py-2 text-right pr-4">
+                                                                                <div className="flex items-center justify-end gap-1">
+                                                                                    <Button
+                                                                                        variant="ghost"
+                                                                                        size="icon"
+                                                                                        className="h-7 w-7 text-slate-400 hover:text-primary"
+                                                                                        onClick={(e) => { e.stopPropagation(); handleOpenModal(holiday); }}
+                                                                                    >
+                                                                                        <Edit className="w-3.5 h-3.5" />
+                                                                                    </Button>
+                                                                                    <Button
+                                                                                        variant="ghost"
+                                                                                        size="icon"
+                                                                                        className="h-7 w-7 text-slate-400 hover:text-red-500"
+                                                                                        onClick={(e) => { e.stopPropagation(); handleDelete(holiday.id); }}
+                                                                                    >
+                                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                                    </Button>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                }
+
+                                const resource = item as Resource;
+                                return (
+                                    <tr key={resource.id} className="hover:bg-slate-50/80 transition-colors h-[54px]">
+                                        <td className="px-4 py-3"><p className="font-semibold text-slate-900 text-xs line-clamp-1" title={resource.title}>{resource.title}</p></td>
+                                        <td className="px-4 py-3 text-xs text-slate-600 font-medium">{resource.release_date}</td>
+                                        <td className="px-4 py-3 text-xs text-slate-600 font-medium">{resource.effective_date}</td>
+                                        <td className="px-4 py-3"><Badge variant="outline" className="text-[10px]">{resource.state}</Badge></td>
+                                        <td className="px-4 py-3">
+                                            <Switch
+                                                checked={resource.is_visible}
+                                                onCheckedChange={() => handleToggleVisibility(resource)}
+                                                disabled={togglingIds.has(resource.id)}
+                                                className="scale-75 data-[state=checked]:bg-emerald-500"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-primary" onClick={() => handleOpenModal(resource)}><Edit className="w-3.5 h-3.5" /></Button>
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500" onClick={() => handleDelete(resource.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         ) : (
-                            <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-xs">No records found.</td></tr>
+                            <tr><td colSpan={6} className="px-4 py-12 text-center text-slate-400 text-xs h-32">No records found.</td></tr>
                         )}
                     </tbody>
                 </table>
-            </div >
+
+
+                {/* Pagination Controls - Fixed at bottom of table container */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-white shrink-0">
+                        <p className="text-xs text-slate-500">
+                            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} entries
+                        </p>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <Button
+                                    key={page}
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    className={cn("h-8 w-8 p-0 text-xs", currentPage === page && "bg-primary")}
+                                    onClick={() => setCurrentPage(page)}
+                                >
+                                    {page}
+                                </Button>
+                            ))}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Standard Resource Modal */}
             < Dialog open={isModalOpen} onOpenChange={setIsModalOpen} >
@@ -655,15 +867,22 @@ const ResourceManager = () => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Released Date</label>
-                                    <div className="relative">
+                                    <div className="relative group">
                                         <Input
-                                            value={selectedResource.release_date}
-                                            readOnly
-                                            className="h-9 text-xs bg-slate-50 text-slate-500"
+                                            value={releaseInput}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setReleaseInput(val);
+                                                if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                                                    setSelectedResource({ ...selectedResource, release_date: val });
+                                                }
+                                            }}
+                                            className="h-9 text-xs border-slate-200 group-hover:border-primary transition-colors pr-10"
+                                            placeholder="YYYY-MM-DD"
                                         />
                                         <Popover>
                                             <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-9 w-9 text-slate-400">
+                                                <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-9 w-9 text-slate-400 group-hover:text-primary">
                                                     <Calendar className="w-4 h-4" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -671,8 +890,15 @@ const ResourceManager = () => {
                                                 <CalendarComponent
                                                     mode="single"
                                                     selected={selectedResource.release_date ? new Date(selectedResource.release_date) : undefined}
-                                                    onSelect={(date) => date && setSelectedResource({ ...selectedResource, release_date: format(date, 'yyyy-MM-dd') })}
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            const val = format(date, 'yyyy-MM-dd');
+                                                            setReleaseInput(val);
+                                                            setSelectedResource({ ...selectedResource, release_date: val });
+                                                        }
+                                                    }}
                                                     initialFocus
+                                                    components={{ Caption: CustomCalendarCaption }}
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -680,20 +906,48 @@ const ResourceManager = () => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Effective Date</label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button variant="outline" className={cn(
-                                                "w-full h-9 text-xs justify-start text-left font-normal border-slate-200",
-                                                !selectedResource.effective_date && "text-slate-400"
-                                            )}>
-                                                <Calendar className="mr-2 h-3.5 w-3.5 text-slate-400" />
-                                                {selectedResource.effective_date || "Select Date"}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="end">
-                                            <CalendarComponent mode="single" selected={selectedResource.effective_date ? new Date(selectedResource.effective_date) : undefined} onSelect={(date) => date && setSelectedResource({ ...selectedResource, effective_date: format(date, 'yyyy-MM-dd') })} initialFocus />
-                                        </PopoverContent>
-                                    </Popover>
+                                    <div className="relative group">
+                                        <Input
+                                            value={effectiveInput}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setEffectiveInput(val);
+                                                if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                                                    setSelectedResource({ ...selectedResource, effective_date: val });
+                                                }
+                                            }}
+                                            className={cn(
+                                                "h-9 text-xs border-slate-200 group-hover:border-primary transition-colors pr-10",
+                                                selectedResource.effective_date && selectedResource.release_date && selectedResource.effective_date < selectedResource.release_date && "border-red-500 focus-visible:ring-red-500"
+                                            )}
+                                            placeholder="YYYY-MM-DD"
+                                        />
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-9 w-9 text-slate-400 group-hover:text-primary">
+                                                    <Calendar className="w-4 h-4" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="end">
+                                                <CalendarComponent
+                                                    mode="single"
+                                                    selected={selectedResource.effective_date ? new Date(selectedResource.effective_date) : undefined}
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            const val = format(date, 'yyyy-MM-dd');
+                                                            setEffectiveInput(val);
+                                                            setSelectedResource({ ...selectedResource, effective_date: val });
+                                                        }
+                                                    }}
+                                                    initialFocus
+                                                    components={{ Caption: CustomCalendarCaption }}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    {selectedResource.effective_date && selectedResource.release_date && selectedResource.effective_date < selectedResource.release_date && (
+                                        <p className="text-[10px] text-red-500 font-medium">Effective Date cannot be before Release Date</p>
+                                    )}
                                 </div>
                                 <div className="col-span-2 space-y-1.5">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</label>
@@ -750,6 +1004,7 @@ const ResourceManager = () => {
                                         selected={holidayDates?.[0]}
                                         onSelect={(date) => setHolidayDates(date ? [date] : [])}
                                         className="rounded-md border-0"
+                                        components={{ Caption: CustomCalendarCaption }}
                                     />
                                 ) : (
                                     <CalendarComponent
@@ -757,6 +1012,7 @@ const ResourceManager = () => {
                                         selected={holidayDates}
                                         onSelect={setHolidayDates}
                                         className="rounded-md border-0"
+                                        components={{ Caption: CustomCalendarCaption }}
                                     />
                                 )}
                             </div>

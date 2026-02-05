@@ -4,19 +4,19 @@ const metrics = [
     {
         id: "01",
         number: "7+",
-        label: "Years of Excellence",
+        label: "7+ Years of Excellence",
         description: "Delivering customized compliance solutions."
     },
     {
         id: "02",
         number: "60+",
-        label: "Compliance Specialists",
+        label: "60+ Compliance Specialists",
         description: "Dedicated experts ensuring your peace of mind."
     },
     {
         id: "03",
         number: "100+",
-        label: "Trusted Clients",
+        label: "100+ Trusted Clients",
         description: "Including industry leaders across sectors."
     }
 ];
@@ -47,10 +47,10 @@ const ImpactScale = () => {
                             {/* Large Background Number */}
                             <motion.span
                                 initial={{ opacity: 0, scale: 0.8 }}
-                                whileInView={{ opacity: 0.1, scale: 1 }}
+                                whileInView={{ opacity: 0.08, scale: 1 }}
                                 transition={{ duration: 1.5, ease: "easeOut" }}
                                 viewport={{ once: true }}
-                                className="absolute -top-16 left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 text-[10rem] font-display font-black text-white select-none pointer-events-none"
+                                className="absolute -top-12 left-1/3 -translate-x-1/2 md:left-0 md:translate-x-0 text-[7rem] font-display font-black text-white select-none pointer-events-none"
                             >
                                 {item.number}
                             </motion.span>

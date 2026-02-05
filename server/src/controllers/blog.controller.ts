@@ -5,14 +5,61 @@ import { AuthRequest } from '../middleware/auth.middleware';
 // PUBLIC & ADMIN: Get all blogs
 export const getAllBlogs = async (req: Request, res: Response) => {
     try {
-        const { include_hidden } = req.query;
-        let query = 'SELECT * FROM blogs';
-        if (include_hidden !== 'true') {
-            query += ' WHERE is_visible = true';
+        const { include_hidden, page = 1, limit = 7, searchTerm, status } = req.query;
+        const offset = (Number(page) - 1) * Number(limit);
+
+        let query = 'SELECT * FROM blogs WHERE 1=1';
+        let countQuery = 'SELECT COUNT(*) FROM blogs WHERE 1=1';
+        const params: any[] = [];
+        let paramIndex = 1;
+
+        // Handle Status Filter
+        const statusValue = typeof status === 'string' ? status.trim().toLowerCase() : null;
+        if (statusValue === 'active') {
+            const condition = ' AND is_visible = true';
+            query += condition;
+            countQuery += condition;
+        } else if (statusValue === 'inactive') {
+            const condition = ' AND is_visible = false';
+            query += condition;
+            countQuery += condition;
+        } else if (statusValue === 'all') {
+            // Show all
+        } else {
+            // Default visibility
+            if (include_hidden !== 'true') {
+                const condition = ' AND is_visible = true';
+                query += condition;
+                countQuery += condition;
+            }
         }
-        query += ' ORDER BY published_date DESC, created_at DESC';
-        const result = await pool.query(query);
-        res.json(result.rows);
+
+        if (searchTerm) {
+            const condition = ` AND (title ILIKE $${paramIndex} OR author ILIKE $${paramIndex})`;
+            query += condition;
+            countQuery += condition;
+            params.push(`%${searchTerm}%`);
+            paramIndex++;
+        }
+
+        // Get total count
+        const countResult = await pool.query(countQuery, params);
+        const totalCount = parseInt(countResult.rows[0].count);
+
+        // Add sorting and pagination
+        query += ` ORDER BY published_date DESC, created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+        params.push(limit, offset);
+
+        const result = await pool.query(query, params);
+        res.json({
+            data: result.rows,
+            pagination: {
+                total: totalCount,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil(totalCount / Number(limit))
+            }
+        });
     } catch (err) {
         console.error('Error fetching blogs:', err);
         res.status(500).json({ message: 'Internal server error' });

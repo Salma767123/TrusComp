@@ -254,7 +254,7 @@ const AdminDashboard = () => {
                             <div className="flex items-center justify-between mb-2">
                                 <CardTitle className="text-lg">Status Analytics</CardTitle>
                                 <Select value={timeFilter} onValueChange={setTimeFilter}>
-                                    <SelectTrigger className="w-[120px] h-8 text-xs">
+                                    <SelectTrigger className="w-[130px] h-9 text-xs font-bold border-slate-200 bg-white text-slate-600 rounded-lg shadow-sm transition-all duration-200 hover:bg-primary/5 hover:border-primary hover:text-primary">
                                         <SelectValue placeholder="Period" />
                                     </SelectTrigger>
                                     <SelectContent>
