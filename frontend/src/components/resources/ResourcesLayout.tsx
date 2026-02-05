@@ -16,17 +16,18 @@ const ResourcesLayout = () => {
             try {
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
                 // Fetch regular resources
-                const resourcesResponse = await fetch(`${apiBase}/resources`);
+                const resourcesResponse = await fetch(`${apiBase}/resources?limit=1000`);
 
                 // Fetch labour law updates
-                const labourLawResponse = await fetch(`${apiBase}/labour-law-updates`);
-
+                const labourLawResponse = await fetch(`${apiBase}/labour-law-updates?limit=1000`);
                 let allResources: ResourceItem[] = [];
 
                 // Map regular resources
                 if (resourcesResponse.ok) {
-                    const data = await resourcesResponse.json();
-                    const mappedData: ResourceItem[] = data.map((item: any) => ({
+                    const responseData = await resourcesResponse.json();
+                    const items = Array.isArray(responseData.resources) ? responseData.resources : [];
+
+                    const mappedData: ResourceItem[] = items.map((item: any) => ({
                         id: String(item.id),
                         title: item.title,
                         description: item.description,
@@ -47,7 +48,8 @@ const ResourcesLayout = () => {
 
                 // Map labour law updates
                 if (labourLawResponse.ok) {
-                    const labourData = await labourLawResponse.json();
+                    const responseData = await labourLawResponse.json();
+                    const items = Array.isArray(responseData.data) ? responseData.data : [];
 
                     // Format date to DD-MM-YYYY
                     const formatDate = (dateStr: string | null) => {
@@ -59,7 +61,7 @@ const ResourcesLayout = () => {
                         return `${day}-${month}-${year}`;
                     };
 
-                    const mappedLabourData: ResourceItem[] = labourData.map((item: any) => ({
+                    const mappedLabourData: ResourceItem[] = items.map((item: any) => ({
                         id: `labour-${item.id}`,
                         title: item.title,
                         description: item.description,
