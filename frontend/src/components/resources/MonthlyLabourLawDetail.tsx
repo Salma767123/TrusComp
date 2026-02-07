@@ -165,7 +165,7 @@ const MonthlyLabourLawDetail = () => {
                                         {resource.title}
                                     </motion.h1>
                                     <p className="text-lg text-gray-300 max-w-2xl leading-relaxed">
-                                        {resource.description} Ensure your organization remains compliant with the latest legislative changes.
+                                        {resource.description}
                                     </p>
                                 </div>
 
