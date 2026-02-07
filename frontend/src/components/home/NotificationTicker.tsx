@@ -21,45 +21,26 @@ const NotificationTicker = () => {
         const fetchData = async () => {
             try {
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "/api/v1";
-                const [labourRes, resourcesRes] = await Promise.all([
-                    fetch(`${apiBase}/labour-law-updates`),
-                    fetch(`${apiBase}/resources`)
-                ]);
+                const response = await fetch(`${apiBase}/labour-law-updates?limit=10&status=active`);
 
-                let allItems: NotificationItem[] = [];
-
-                if (labourRes.ok) {
-                    const res = await labourRes.json();
+                if (response.ok) {
+                    const res = await response.json();
                     const data = res.data || [];
-                    allItems = [...allItems, ...data.map((item: any) => ({
+                    const items: NotificationItem[] = data.map((item: any) => ({
                         id: `labour-${item.id}`,
                         title: item.title,
                         type: 'Labour Law' as const,
                         link: `/resources/monthly-labour-law/labour-${item.id}`,
                         date: new Date(item.release_date || item.createdAt || item.created_at)
-                    }))];
+                    }));
+
+                    // Sort by date descending
+                    const sortedItems = items
+                        .filter(item => !isNaN(item.date.getTime()))
+                        .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+                    setNotifications(sortedItems);
                 }
-
-                if (resourcesRes.ok) {
-                    const res = await resourcesRes.json();
-                    const data = res.resources || [];
-                    allItems = [...allItems, ...data.map((item: any) => ({
-                        id: `resource-${item.id}`,
-                        title: item.title,
-                        type: 'Resource' as const,
-                        link: item.category === "Labour Law Updates"
-                            ? `/resources/monthly-labour-law/resource-${item.id}`
-                            : `/resources/monthly-labour-law/${item.id}`,
-                        date: new Date(item.release_date || item.createdAt || item.created_at)
-                    }))];
-                }
-
-                // Sort by date descending
-                allItems = allItems
-                    .filter(item => !isNaN(item.date.getTime()))
-                    .sort((a, b) => b.date.getTime() - a.date.getTime());
-
-                setNotifications(allItems.slice(0, 10)); // Keep latest 10 for the ticker
             } catch (err) {
                 console.error("Error fetching notifications for ticker:", err);
             } finally {

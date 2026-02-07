@@ -11,11 +11,13 @@ const ResourcesBlog = () => {
         const fetchBlogs = async () => {
             try {
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-                const response = await fetch(`${apiBase}/blogs`);
+                const response = await fetch(`${apiBase}/blogs?limit=20&status=active`);
                 if (response.ok) {
-                    const data = await response.json();
+                    const responseData = await response.json();
+                    const blogsData = responseData.data || [];
+
                     // Sort by published_date descending (Newest First)
-                    const sortedData = data.sort((a: any, b: any) =>
+                    const sortedData = blogsData.sort((a: any, b: any) =>
                         new Date(b.published_date).getTime() - new Date(a.published_date).getTime()
                     );
                     setBlogs(sortedData);
