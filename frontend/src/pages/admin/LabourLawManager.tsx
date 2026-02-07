@@ -23,6 +23,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -201,9 +202,11 @@ const LabourLawManager = () => {
 
                 console.log(`[LabourLaw] API response: ${items.length} records found`);
 
-                // Parse JSONB fields
+                // Parse JSONB fields and format dates
                 const parsedData = items.map((item: any) => ({
                     ...item,
+                    release_date: item.release_date ? item.release_date.split('T')[0] : "",
+                    end_date: item.end_date ? item.end_date.split('T')[0] : null,
                     documents: typeof item.documents === 'string' ? JSON.parse(item.documents) : item.documents || [],
                     videos: typeof item.videos === 'string' ? JSON.parse(item.videos) : item.videos || []
                 }));
@@ -655,7 +658,7 @@ const LabourLawManager = () => {
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className={cn("w-full h-9 text-xs justify-start text-left font-normal border-slate-200", !selectedUpdate.release_date && "text-slate-400")}>
                                                     <Calendar className="mr-2 h-3.5 w-3.5 text-slate-400" />
-                                                    {selectedUpdate.release_date || "Select Date"}
+                                                    {selectedUpdate.release_date ? formatDate(selectedUpdate.release_date) : "Select Date"}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0" align="start">
@@ -677,7 +680,7 @@ const LabourLawManager = () => {
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className={cn("w-full h-9 text-xs justify-start text-left font-normal border-slate-200", !selectedUpdate.end_date && "text-slate-400")}>
                                                     <Calendar className="mr-2 h-3.5 w-3.5 text-slate-400" />
-                                                    {selectedUpdate.end_date || "Select Date"}
+                                                    {selectedUpdate.end_date ? formatDate(selectedUpdate.end_date) : "Select Date"}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0" align="start">

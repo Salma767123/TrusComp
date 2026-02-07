@@ -1,10 +1,11 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Download, Play, Calendar, FileText, CheckCircle2, User, ChevronRight, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, Play, Calendar, FileText, CheckCircle2, User, ChevronRight, ArrowRight, Sparkles, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
     Dialog,
     DialogContent,
@@ -42,6 +43,16 @@ const MonthlyLabourLawDetail = () => {
     const [resource, setResource] = useState<LabourLawUpdate | null>(null);
     const [loading, setLoading] = useState(true);
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyLink = () => {
+        if (resource?.webinar_link) {
+            navigator.clipboard.writeText(resource.webinar_link);
+            setCopied(true);
+            toast.success("Link copied successfully!");
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
 
     const isRegistrationExpired = resource?.end_date
         ? new Date(new Date().setHours(0, 0, 0, 0)) > new Date(new Date(resource.end_date).setHours(0, 0, 0, 0))
@@ -51,7 +62,7 @@ const MonthlyLabourLawDetail = () => {
         const fetchUpdate = async () => {
             try {
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "";
-                const response = await fetch(`${apiBase}/labour-law-updates/${numericId}`);
+                const response = await fetch(`${apiBase} /labour-law-updates/${numericId} `);
                 if (response.ok) {
                     const data = await response.json();
                     // Parse JSONB fields
@@ -79,7 +90,7 @@ const MonthlyLabourLawDetail = () => {
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
+        return `${day} -${month} -${year} `;
     };
 
     // Extract YouTube video ID from URL
@@ -389,12 +400,12 @@ const MonthlyLabourLawDetail = () => {
                                     <p>No videos available for this update.</p>
                                 </div>
                             )}
-                        </div>
-                    </div>
-                </section>
+                        </div >
+                    </div >
+                </section >
 
                 {/* 4. Meaningful Conversion CTA Section */}
-                <section className="relative py-24 bg-gray-900 border-t border-gray-800 overflow-hidden">
+                < section className="relative py-24 bg-gray-900 border-t border-gray-800 overflow-hidden" >
                     <div className="absolute inset-0">
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-500/10 via-gray-900 to-gray-900" />
                         <motion.div
@@ -446,8 +457,8 @@ const MonthlyLabourLawDetail = () => {
                             </Link>
                         </motion.div>
                     </div>
-                </section>
-            </main>
+                </section >
+            </main >
             <Footer />
 
             {/* Registration Modal */}
@@ -476,13 +487,31 @@ const MonthlyLabourLawDetail = () => {
                             </p>
                         </div>
 
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-4">
+                            {resource.webinar_link && (
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Webinar URL</label>
+                                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-1.5 focus-within:border-[#FF8C00]/50 transition-colors group/input">
+                                        <div className="flex-1 px-3 py-2 text-sm text-gray-300 truncate font-mono">
+                                            {resource.webinar_link}
+                                        </div>
+                                        <button
+                                            onClick={handleCopyLink}
+                                            className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-[#FF8C00] transition-all active:scale-95"
+                                            title="Copy link"
+                                        >
+                                            {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <button
                                 onClick={() => {
                                     window.open(resource.webinar_link || '', '_blank');
                                     setIsRegisterModalOpen(false);
                                 }}
-                                className="w-full py-4 bg-[#FF8C00] text-white font-bold rounded-xl shadow-lg shadow-orange-900/20 hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-[#FF8C00] text-white font-bold rounded-xl shadow-lg shadow-orange-900/20 hover:bg-orange-600 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2"
                             >
                                 {resource.webinar_link?.includes('zoom') || resource.webinar_link?.includes('meet.google')
                                     ? "Open Meeting Link"
