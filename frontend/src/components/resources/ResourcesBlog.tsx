@@ -10,7 +10,8 @@ const ResourcesBlog = () => {
     useEffect(() => {
         const fetchBlogs = async () => {
             try {
-                const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+                const apiBase = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+                console.log(`[ResourcesBlog] Fetching from: ${apiBase}/blogs`);
                 const response = await fetch(`${apiBase}/blogs?limit=20&status=active`);
                 if (response.ok) {
                     const responseData = await response.json();

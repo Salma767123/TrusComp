@@ -21,6 +21,7 @@ const NotificationTicker = () => {
         const fetchData = async () => {
             try {
                 const apiBase = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+                console.log(`[NotificationTicker] Fetching from: ${apiBase}/labour-law-updates`);
                 const response = await fetch(`${apiBase}/labour-law-updates?limit=10&status=active`);
 
                 if (response.ok) {
