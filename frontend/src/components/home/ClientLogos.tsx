@@ -1,15 +1,25 @@
 import { Building2, Sparkles } from "lucide-react";
 import AnimatedSection from "@/components/ui/animated-section";
 
+// Import logos
+import eucareLogo from "@/assets/eucare-1.png";
+import yuluLogo from "@/assets/yulu-2.png";
+import yumaLogo from "@/assets/yuma-3.png";
+import apolloLogo from "@/assets/apollo-4.png";
+import kothariLogo from "@/assets/kotharai-5.png";
+import sanofiLogo from "@/assets/sanofi-6.png";
+import fischerLogo from "@/assets/fischer-7.png";
+import sankarLogo from "@/assets/sanker-8.png";
+
 const clients = [
-  "Amara Raja",
-  "Blue Star",
-  "Dr. Reddy's",
-  "Hetero",
-  "Laurus Labs",
-  "Granules India",
-  "Shriram Chits",
-  "Suven Life Sciences",
+  { name: "EUCARE", logo: eucareLogo },
+  { name: "YULU", logo: yuluLogo },
+  { name: "YUMA", logo: yumaLogo },
+  { name: "Apollo Hospitals", logo: apolloLogo },
+  { name: "KICL", logo: kothariLogo },
+  { name: "Sanofi", logo: sanofiLogo },
+  { name: "Fischer", logo: fischerLogo },
+  { name: "Sankar", logo: sankarLogo },
 ];
 
 const ClientLogos = () => {
@@ -85,10 +95,6 @@ const ClientLogos = () => {
 
         {/* --- Logo Carousel Section (CLEAN TRANSITION) --- */}
         <div className="relative mb-20 px-4">
-          {/* 
-            CRITICAL: Clean Transparency Mask (Replaces Old Corner Shadows)
-            Ensures logos fade naturally via opacity without dark vignettes.
-          */}
           <div
             className="overflow-hidden"
             style={{
@@ -103,11 +109,13 @@ const ClientLogos = () => {
                   key={`first-${index}`}
                   className="flex-shrink-0 mx-6"
                 >
-                  <div className="group relative px-10 py-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] cursor-pointer">
+                  <div className="group relative px-8 py-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] cursor-pointer flex items-center justify-center min-w-[200px] h-32">
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <span className="relative text-lg font-semibold text-white group-hover:text-primary transition-colors whitespace-nowrap">
-                      {client}
-                    </span>
+                    <img
+                      src={client.logo}
+                      alt={client.name}
+                      className="relative max-w-[160px] max-h-[80px] object-contain transition-all duration-300 group-hover:scale-110"
+                    />
                   </div>
                 </div>
               ))}
@@ -117,11 +125,13 @@ const ClientLogos = () => {
                   key={`second-${index}`}
                   className="flex-shrink-0 mx-6"
                 >
-                  <div className="group relative px-10 py-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] cursor-pointer">
+                  <div className="group relative px-8 py-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] cursor-pointer flex items-center justify-center min-w-[200px] h-32">
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <span className="relative text-lg font-semibold text-white group-hover:text-primary transition-colors whitespace-nowrap">
-                      {client}
-                    </span>
+                    <img
+                      src={client.logo}
+                      alt={client.name}
+                      className="relative max-w-[160px] max-h-[80px] object-contain transition-all duration-300 group-hover:scale-110"
+                    />
                   </div>
                 </div>
               ))}
@@ -152,3 +162,4 @@ const ClientLogos = () => {
 };
 
 export default ClientLogos;
+
