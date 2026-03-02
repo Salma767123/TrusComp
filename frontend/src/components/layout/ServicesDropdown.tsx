@@ -115,6 +115,13 @@ const ServicesDropdown = ({ isMobile = false }: ServicesDropdownProps) => {
                             </Link>
                         ))}
                         <Link
+                            to="/services/gcc"
+                            onClick={() => setIsOpen(false)}
+                            className="block px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200"
+                        >
+                            GCC
+                        </Link>
+                        <Link
                             to="/services"
                             className="block px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 rounded-lg transition-all duration-200"
                         >
@@ -193,6 +200,17 @@ const ServicesDropdown = ({ isMobile = false }: ServicesDropdownProps) => {
                                     </span>
                                 </Link>
                             ))}
+
+                            <Link
+                                to="/services/gcc"
+                                className="group block px-4 py-3 text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200 relative overflow-hidden"
+                                role="menuitem"
+                            >
+                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-primary rounded-r-full transition-all duration-300 group-hover:h-8" />
+                                <span className="block pl-2 transition-transform duration-200 group-hover:translate-x-1">
+                                    GCC
+                                </span>
+                            </Link>
 
                             {/* Divider */}
                             <div className="my-2 mx-3 border-t border-border" />

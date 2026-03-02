@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Services from "./pages/Services";
 import ServiceDetail from "./pages/ServiceDetail";
 import WageCalculator from "./pages/WageCalculator";
+import GCC from "./pages/GCC";
 import Resources from "./pages/Resources";
 import BlogDetail from "./pages/BlogDetail";
 import UpdateDetail from "./pages/UpdateDetail";
@@ -61,6 +62,7 @@ const AppContent = () => {
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/services/gcc" element={<GCC />} />
           <Route path="/services/:id" element={<ServiceDetail />} />
           <Route path="/calculator" element={<WageCalculator />} />
           <Route path="/testimonials" element={<Testimonials />} />
