@@ -34,8 +34,22 @@ const loginLimiter = rateLimit({
 });
 
 // Middleware
+const allowedOrigins = [
+    'https://truscomp-frontend.vercel.app',
+    'http://localhost:8080',
+    'http://localhost:3000',
+    process.env.CLIENT_URL
+].filter(Boolean) as string[];
+
 const corsOptions = {
-    origin: 'https://truscomp-frontend.vercel.app',
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Allow requests with no origin (e.g. curl, mobile apps)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS not allowed for origin: ${origin}`));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
