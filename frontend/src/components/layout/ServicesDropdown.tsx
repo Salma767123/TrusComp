@@ -98,39 +98,59 @@ const ServicesDropdown = ({ isMobile = false }: ServicesDropdownProps) => {
                     />
                 </button>
 
-                {/* Mobile dropdown menu */}
+                {/* Mobile & Tablet dropdown menu */}
                 <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
                         }`}
                 >
-                    <div className="py-2 pl-4 space-y-1">
-                        {services.map((service) => (
-                            <Link
-                                key={service.id}
-                                to={`/services/${service.slug}`}
-                                onClick={() => setIsOpen(false)}
-                                className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200"
-                            >
-                                {service.title}
-                            </Link>
-                        ))}
-                        <Link
-                            to="/services/gcc"
-                            onClick={() => setIsOpen(false)}
-                            className="block px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200"
-                        >
-                            GCC
-                        </Link>
-                        <Link
-                            to="/services"
-                            className="block px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 rounded-lg transition-all duration-200"
-                        >
-                            Explore All
-                        </Link>
+                    <div className="py-2 px-2 md:px-4">
+                        <div className="md:columns-2 md:gap-4 space-y-1 md:space-y-0 text-left">
+                            {services.map((service) => (
+                                <div key={service.id} className="break-inside-avoid md:mb-1">
+                                    <Link
+                                        to={`/services/${service.slug}`}
+                                        onClick={() => setIsOpen(false)}
+                                        className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200"
+                                    >
+                                        {service.title}
+                                    </Link>
+                                </div>
+                            ))}
+                            <div className="break-inside-avoid md:mb-1">
+                                <Link
+                                    to="/services/gcc"
+                                    onClick={() => setIsOpen(false)}
+                                    className="block px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200"
+                                >
+                                    GCC
+                                </Link>
+                            </div>
+                            <div className="break-inside-avoid mt-2 md:mt-0 md:pt-2">
+                                <Link
+                                    to="/services"
+                                    onClick={() => setIsOpen(false)}
+                                    className="block px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 text-center md:text-left"
+                                >
+                                    Explore All Services →
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         );
+    }
+
+    // Helper to divide services into roughly equal columns for Desktop Grid
+    const desktopColumns = [];
+    const desktopItems = [...services];
+    // Add GCC and Explore All to the list of items to render in the grid
+    desktopItems.push({ id: 'gcc-item', title: 'Global Capability Center (GCC)', slug: 'gcc' });
+    desktopItems.push({ id: 'explore-all', title: 'Explore All Services →', slug: '', isAction: true });
+
+    const itemsPerColumn = Math.ceil(desktopItems.length / 4);
+    for (let i = 0; i < 4; i++) {
+        desktopColumns.push(desktopItems.slice(i * itemsPerColumn, (i + 1) * itemsPerColumn));
     }
 
     // Desktop hover-activated dropdown
@@ -172,64 +192,38 @@ const ServicesDropdown = ({ isMobile = false }: ServicesDropdownProps) => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 15 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-[100] origin-top pointer-events-auto"
+                        className="absolute top-full left-[60%] -translate-x-1/2 mt-4 w-[850px] xl:w-[950px] bg-card border border-border rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] overflow-hidden z-[100] origin-top pointer-events-auto"
                         role="menu"
                         aria-orientation="vertical"
                     >
-                        <div className="py-2 px-1">
-                            {services.map((service, index) => (
-                                <Link
-                                    key={service.id}
-                                    to={`/services/${service.slug}`}
-                                    className="group block px-4 py-3 text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200 relative overflow-hidden"
-                                    role="menuitem"
-                                    style={{
-                                        animationDelay: `${index * 30}ms`,
-                                    }}
-                                >
-                                    {/* Hover accent line */}
-                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-primary rounded-r-full transition-all duration-300 group-hover:h-8" />
-
-                                    {/* Service title */}
-                                    <span className="block pl-2 transition-transform duration-200 group-hover:translate-x-1">
-                                        {service.title}
-                                    </span>
-                                </Link>
-                            ))}
-
-                            <Link
-                                to="/services/gcc"
-                                className="group block px-4 py-3 text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-lg transition-all duration-200 relative overflow-hidden"
-                                role="menuitem"
-                            >
-                                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-primary rounded-r-full transition-all duration-300 group-hover:h-8" />
-                                <span className="block pl-2 transition-transform duration-200 group-hover:translate-x-1">
-                                    GCC
-                                </span>
-                            </Link>
-
-                            {/* Divider */}
-                            <div className="my-2 mx-3 border-t border-border" />
-
-                            {/* Explore All link */}
-                            <Link
-                                to="/services"
-                                className="group block px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 relative overflow-hidden"
-                                role="menuitem"
-                            >
-                                <span className="flex items-center justify-between">
-                                    <span className="transition-transform duration-200 group-hover:translate-x-1">
-                                        Explore All
-                                    </span>
-                                    <span className="text-xs opacity-0 -translate-x-2 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
-                                        →
-                                    </span>
-                                </span>
-                            </Link>
+                        <div className="p-6">
+                            <div className="grid grid-cols-4 gap-8">
+                                {desktopColumns.map((col, colIdx) => (
+                                    <div
+                                        key={colIdx}
+                                        className={`flex flex-col gap-2 ${colIdx !== 3 ? 'border-r border-black/5 pr-6' : ''}`}
+                                    >
+                                        {col.map((item) => (
+                                            <Link
+                                                key={item.id}
+                                                to={item.isAction ? '/services' : `/services/${item.slug}`}
+                                                className={`group block px-3 py-2 text-[14px] leading-[20px] rounded-lg transition-all duration-200 
+                                                    ${item.isAction ? 'font-semibold text-primary hover:bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80'}
+                                                `}
+                                                role="menuitem"
+                                            >
+                                                <span className="block transition-transform duration-200 group-hover:translate-x-1">
+                                                    {item.title}
+                                                </span>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </motion.div>
                 )}
