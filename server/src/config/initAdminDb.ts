@@ -44,7 +44,7 @@ const initAdminDb = async () => {
                 id SERIAL PRIMARY KEY,
                 slug VARCHAR(100) UNIQUE NOT NULL,
                 title VARCHAR(255) NOT NULL,
-                category_id VARCHAR(50) NOT NULL,
+                category VARCHAR(50) NOT NULL,
                 short_overview TEXT,
                 long_overview TEXT,
                 doodle_type VARCHAR(50),
@@ -59,7 +59,7 @@ const initAdminDb = async () => {
             ALTER TABLE services ADD COLUMN IF NOT EXISTS short_overview TEXT;
             ALTER TABLE services ADD COLUMN IF NOT EXISTS long_overview TEXT;
             ALTER TABLE services ADD COLUMN IF NOT EXISTS state VARCHAR(100);
-            ALTER TABLE services ADD COLUMN IF NOT EXISTS category_id VARCHAR(50);
+            ALTER TABLE services ADD COLUMN IF NOT EXISTS category VARCHAR(50);
             
             CREATE TABLE IF NOT EXISTS service_problems (
                 id SERIAL PRIMARY KEY,
@@ -88,6 +88,14 @@ const initAdminDb = async () => {
                 id SERIAL PRIMARY KEY,
                 service_id INTEGER REFERENCES services(id) ON DELETE CASCADE,
                 point_text TEXT NOT NULL,
+                sort_order INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS service_faqs (
+                id SERIAL PRIMARY KEY,
+                service_id INTEGER REFERENCES services(id) ON DELETE CASCADE,
+                question TEXT NOT NULL,
+                answer TEXT NOT NULL,
                 sort_order INTEGER DEFAULT 0
             );
 
