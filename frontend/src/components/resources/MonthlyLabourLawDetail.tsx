@@ -263,52 +263,54 @@ const MonthlyLabourLawDetail = () => {
                             <p className="text-gray-600">Download curated compliance documents and reference materials</p>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="flex flex-col gap-4">
                             {resource.documents && resource.documents.length > 0 ? (
-                                resource.documents.map((doc, i) => {
-                                    const date = new Date(resource.release_date);
-                                    const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' }).replace(' ', ' - ');
-
-                                    return (
-                                        <motion.div
-                                            key={i}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            whileInView={{ opacity: 1, y: 0 }}
-                                            viewport={{ once: true }}
-                                            transition={{ delay: i * 0.1 }}
-                                            className="group relative bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col items-center text-center space-y-4"
-                                        >
-                                            {/* PDF Icon - Top Left focused look */}
-                                            <div className="absolute top-4 left-4">
-                                                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform duration-300 shadow-inner">
-                                                    <FileText className="w-5 h-5" />
-                                                </div>
+                                resource.documents.map((doc, i) => (
+                                    <motion.div
+                                        key={i}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        whileInView={{ opacity: 1, x: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: i * 0.1 }}
+                                        whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}
+                                        className="group relative flex flex-col md:flex-row items-start md:items-center gap-6 p-5 bg-white/60 backdrop-blur-md rounded-2xl border border-white/60 shadow-sm hover:shadow-md hover:border-orange-200/50 transition-all duration-300"
+                                    >
+                                        {/* Icon Container */}
+                                        <div className="flex-shrink-0">
+                                            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                                <FileText className="w-6 h-6 text-[#FF8C00]" />
                                             </div>
+                                        </div>
 
-                                            {/* Space for the absolute icon */}
-                                            <div className="h-4" />
+                                        {/* Content Area */}
+                                        <div className="flex-grow min-w-0 space-y-1">
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#FF8C00] transition-colors line-clamp-1">
+                                                    {doc.title}
+                                                </h3>
+                                                <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 border border-gray-200">
+                                                    PDF
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-500 line-clamp-2 md:line-clamp-1 leading-relaxed">
+                                                {doc.description}
+                                            </p>
+                                        </div>
 
-                                            {/* Main Text: Month - Year */}
-                                            <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors pt-2">
-                                                {monthYear}
-                                            </h3>
-
-                                            {/* Description Placeholder or doc title if needed, but spec says Month - Year */}
-                                            {/* <p className="text-sm text-gray-500 line-clamp-1">{doc.title}</p> */}
-
-                                            {/* Clickable link text */}
+                                        {/* Action Area */}
+                                        <div className="flex-shrink-0 w-full md:w-auto mt-2 md:mt-0">
                                             <button
                                                 onClick={() => window.open(doc.url, '_blank')}
-                                                className="text-[#FF8C00] font-bold text-sm hover:underline flex items-center gap-1 transition-all"
+                                                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-[#FF8C00] hover:text-white hover:border-[#FF8C00] transition-all group-active:scale-[0.98]"
                                             >
-                                                Click Here
-                                                <ArrowRight className="w-4 h-4" />
+                                                <span>Download</span>
+                                                <Download className="w-4 h-4" />
                                             </button>
-                                        </motion.div>
-                                    );
-                                })
+                                        </div>
+                                    </motion.div>
+                                ))
                             ) : (
-                                <div className="col-span-full text-center py-16 bg-white/40 rounded-3xl border border-dashed border-gray-200">
+                                <div className="text-center py-16 bg-white/40 rounded-3xl border border-dashed border-gray-200">
                                     <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                                     <p className="text-gray-400 font-medium">No documents available at the moment.</p>
                                 </div>
