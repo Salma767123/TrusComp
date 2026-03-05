@@ -224,7 +224,15 @@ const BlogManager = () => {
 
     const handleOpenModal = (blog?: Blog) => {
         if (blog) {
-            setSelectedBlog({ ...blog });
+            // Ensure published_date is always formatted as YYYY-MM-DD
+            const formattedDate = blog.published_date
+                ? (blog.published_date.includes('T') ? blog.published_date.split('T')[0] : blog.published_date)
+                : '';
+
+            setSelectedBlog({
+                ...blog,
+                published_date: formattedDate
+            });
         } else {
             const today = new Date().toISOString().split('T')[0];
             setSelectedBlog({
@@ -710,25 +718,22 @@ const BlogManager = () => {
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Release Date *</label>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="outline" className={cn("w-full h-9 text-xs justify-start text-left font-normal border-slate-200", !selectedBlog.published_date && "text-slate-400")}>
-                                                    <Calendar className="mr-2 h-3.5 w-3.5 text-slate-400" />
-                                                    {selectedBlog.published_date || "Select Date"}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <CalendarComponent
-                                                    mode="single"
-                                                    selected={selectedBlog.published_date ? new Date(selectedBlog.published_date) : undefined}
-                                                    onSelect={(date) => date && setSelectedBlog({
+                                        <div className="relative">
+                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                                            <input
+                                                type="date"
+                                                value={selectedBlog.published_date}
+                                                onChange={(e) => {
+                                                    const newDate = e.target.value;
+                                                    setSelectedBlog({
                                                         ...selectedBlog,
-                                                        published_date: format(date, 'yyyy-MM-dd'),
-                                                        date_text: format(date, 'MMMM dd, yyyy')
-                                                    })}
-                                                    initialFocus />
-                                            </PopoverContent>
-                                        </Popover>
+                                                        published_date: newDate,
+                                                        date_text: newDate ? format(new Date(newDate), 'MMMM dd, yyyy') : ''
+                                                    });
+                                                }}
+                                                className="flex h-9 w-full rounded-md border border-slate-200 bg-transparent pl-9 pr-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Read Time</label>
