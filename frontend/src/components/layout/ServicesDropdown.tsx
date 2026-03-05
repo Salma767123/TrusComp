@@ -196,27 +196,27 @@ const ServicesDropdown = ({ isMobile = false }: ServicesDropdownProps) => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 15 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute top-full left-[60%] -translate-x-1/2 mt-4 w-[850px] xl:w-[950px] bg-card border border-border rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] overflow-hidden z-[100] origin-top pointer-events-auto"
+                        className="absolute top-full left-[-120px] mt-4 w-[780px] xl:w-[860px] bg-card border border-border rounded-xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] overflow-hidden z-[100] origin-top pointer-events-auto"
                         role="menu"
                         aria-orientation="vertical"
                     >
-                        <div className="p-6">
-                            <div className="grid grid-cols-4 gap-8">
+                        <div className="py-5 px-6">
+                            <div className="grid grid-cols-4 gap-6">
                                 {desktopColumns.map((col, colIdx) => (
                                     <div
                                         key={colIdx}
-                                        className={`flex flex-col gap-2 ${colIdx !== 3 ? 'border-r border-black/5 pr-6' : ''}`}
+                                        className={`flex flex-col gap-2 ${colIdx !== 3 ? 'border-r border-black/5 pr-4' : ''}`}
                                     >
                                         {col.map((item) => (
                                             <Link
                                                 key={item.id}
                                                 to={item.isAction ? '/services' : `/services/${item.slug}`}
-                                                className={`group block px-3 py-2 text-[14px] leading-[20px] rounded-lg transition-all duration-200 
-                                                    ${item.isAction ? 'font-semibold text-primary hover:bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/80'}
+                                                className={`group block py-1.5 text-[14px] leading-[20px] transition-all duration-200 
+                                                    ${item.isAction ? 'font-semibold text-primary' : 'text-muted-foreground'}
                                                 `}
                                                 role="menuitem"
                                             >
-                                                <span className="block transition-transform duration-200 group-hover:translate-x-1">
+                                                <span className="block transition-transform duration-200 ease-in-out group-hover:translate-x-[3px] group-hover:text-[#ff8c00]">
                                                     {item.title}
                                                 </span>
                                             </Link>
