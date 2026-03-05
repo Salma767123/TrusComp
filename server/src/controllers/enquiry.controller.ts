@@ -29,12 +29,24 @@ export const submitEnquiry = async (req: Request, res: Response) => {
                 // 1. Fetch Admin Notification Email from Settings
                 const settingsRes = await pool.query("SELECT value FROM settings WHERE key = 'admin_account_email'");
 
-                // key might store raw string or JSONB. Based on settings controller, it's inserted as JSONB.
-                // If it's a string, it might be stored as "email@example.com" (with quotes) or raw if not stringified.
-                // Based on settings.controller.ts line 159, strings are JSON.stringified.
                 let adminEmail = settingsRes.rows[0]?.value;
                 if (typeof adminEmail === 'string' && adminEmail.startsWith('"')) {
                     try { adminEmail = JSON.parse(adminEmail); } catch (e) { }
+                }
+
+                // Fallback 1: Try contact_email setting
+                if (!adminEmail) {
+                    const contactRes = await pool.query("SELECT value FROM settings WHERE key = 'contact_email'");
+                    adminEmail = contactRes.rows[0]?.value;
+                    if (typeof adminEmail === 'string' && adminEmail.startsWith('"')) {
+                        try { adminEmail = JSON.parse(adminEmail); } catch (e) { }
+                    }
+                }
+
+                // Fallback 2: Try first admin in admins table
+                if (!adminEmail) {
+                    const adminRes = await pool.query("SELECT email FROM admins ORDER BY id ASC LIMIT 1");
+                    adminEmail = adminRes.rows[0]?.email;
                 }
 
                 if (!adminEmail) {
