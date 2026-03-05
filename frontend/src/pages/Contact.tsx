@@ -20,9 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Phone, MapPin, Send, CheckCircle2, X } from "lucide-react";
+import { Mail, Phone, MapPin, Send, CheckCircle2, X, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSEO } from "@/hooks/useSEO";
+import qrCode from "@/assets/qr.png";
 
 interface Service {
   id: number;
@@ -312,35 +313,6 @@ const Contact = () => {
                   </motion.div>
                 </div>
               </div>
-
-              <div className="bg-slate-900 text-white rounded-2xl p-8 shadow-xl shadow-slate-900/10">
-                <h4 className="font-display font-semibold mb-4 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  Connect with Our Team
-                </h4>
-                <ul className="space-y-3 text-sm text-slate-300">
-                  <li className="flex justify-between border-b border-slate-800 pb-2">
-                    <span>Contact Mr</span>
-                    <span className="font-medium text-white">MV Prakash</span>
-                  </li>
-                  <li className="flex justify-between border-b border-slate-800 pb-2">
-                    <span>Designation</span>
-                    <span className="font-medium text-white">Senior Vice President</span>
-                  </li>
-                  <li className="flex justify-between border-b border-slate-800 pb-2">
-                    <span>Phone</span>
-                    <span className="font-medium text-white">+91 97438 83000</span>
-                  </li>
-                  <li className="flex justify-between border-b border-slate-800 pb-2">
-                    <span>Mail</span>
-                    <span className="font-medium text-white">prakash@truscomp.com</span>
-                  </li>
-                  {/* <li className="flex justify-between">
-                    <span>Sunday</span>
-                    <span className="font-medium text-orange-400">Closed</span>
-                  </li> */}
-                </ul>
-              </div>
             </div>
 
             {/* Contact Form */}
@@ -442,6 +414,92 @@ const Contact = () => {
               </div>
             </div>
           </div>
+
+          {/* Connect with Our Team - Full Width Horizontal Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 lg:mt-24 mb-6 lg:mb-12 bg-slate-900 text-white rounded-3xl p-8 lg:p-12 shadow-2xl shadow-slate-900/20 relative overflow-hidden group"
+          >
+            {/* Background Decals */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-bl-full -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/5 rounded-tr-full -ml-8 -mb-8 group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
+
+            <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16 relative z-10">
+              {/* Contact Person Details */}
+              <div className="flex-grow space-y-6 text-center lg:text-left">
+                <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  <h4 className="font-display font-semibold text-white tracking-widest uppercase text-[10px]">
+                    Connect with Our Team
+                  </h4>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-3xl font-display font-bold text-white tracking-tight">Mr. MV Prakash</h3>
+                    <p className="text-primary text-sm font-semibold mt-1">Senior Vice President</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 pt-2">
+                    <div className="flex items-center gap-3 group/item">
+                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-all duration-300">
+                        <Phone className="w-5 h-5" />
+                      </div>
+                      <a href="tel:+919743883000" className="text-sm text-slate-300 hover:text-white transition-colors font-medium">
+                        +91 97438 83000
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-3 group/item">
+                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-all duration-300">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <a href="mailto:prakash@truscomp.com" className="text-base text-slate-300 hover:text-white transition-colors font-medium">
+                        prakash@truscomp.com
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vertical Divider (Desktop Only) */}
+              <div className="hidden lg:block w-px h-32 bg-slate-800" />
+
+              {/* QR Code Section */}
+              <div className="flex flex-col items-center gap-4 text-center shrink-0">
+                <div className="bg-white p-3.5 rounded-2xl shadow-2xl transition-all hover:scale-105 duration-500">
+                  <img
+                    src={qrCode}
+                    alt="Connect QR Code"
+                    className="w-28 h-28 lg:w-32 lg:h-32 object-contain"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white mb-0.5">Scan to Connect</p>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">Instant Contact Access</p>
+                </div>
+              </div>
+
+              {/* Vertical Divider (Desktop Only) */}
+              <div className="hidden lg:block w-px h-32 bg-slate-800" />
+
+              {/* WhatsApp Call to Action */}
+              <div className="flex-shrink-0 flex flex-col items-center lg:items-start gap-4">
+                <div className="text-center lg:text-left">
+                  <p className="text-lg font-display font-bold text-white mb-1">Quick WhatsApp Access</p>
+                  <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">Have urgent compliance questions? Chat with our experts directly for instant support.</p>
+                </div>
+                <Button
+                  onClick={() => window.open('https://wa.me/919743883000', '_blank')}
+                  className="bg-[#25D366] hover:bg-[#20ba59] text-white border-0 h-12 px-8 rounded-xl font-bold transition-all shadow-xl shadow-emerald-500/10 group/wa w-full sm:w-auto"
+                >
+                  <MessageCircle className="w-5 h-5 mr-2 group-hover/wa:rotate-12 transition-transform" />
+                  Message on WhatsApp
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 

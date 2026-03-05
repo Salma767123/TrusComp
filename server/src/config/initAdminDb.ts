@@ -280,6 +280,18 @@ const initAdminDb = async () => {
             -- Safe schema updates for labour_law_updates
             ALTER TABLE labour_law_updates ADD COLUMN IF NOT EXISTS webinar_link TEXT;
 
+            -- New table for individual documents to support filtering
+            CREATE TABLE IF NOT EXISTS labour_law_documents (
+                id SERIAL PRIMARY KEY,
+                update_id INTEGER REFERENCES labour_law_updates(id) ON DELETE CASCADE,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                year INTEGER NOT NULL,
+                month VARCHAR(20) NOT NULL,
+                url TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
             -- Seed default categories for services if not exists
             INSERT INTO settings (key, value)
             VALUES ('service_categories', '["Labor law Compliance", "Audit & Verification", "Licensing & Registration", "Industrial Relations", "Payroll & Remittances"]')

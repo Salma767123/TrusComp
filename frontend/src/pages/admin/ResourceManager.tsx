@@ -150,7 +150,7 @@ const ResourceManager = () => {
 
     const CustomCalendarCaption = ({ displayMonth }: CaptionProps) => {
         const { goToMonth, nextMonth, previousMonth } = useNavigation();
-        const startYear = 1940;
+        const startYear = 1800;
         const currentYear = new Date().getFullYear();
         const endYear = currentYear + 30;
         const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
@@ -335,12 +335,12 @@ const ResourceManager = () => {
                 category: activeTab,
                 description: "",
                 download_url: "",
-                release_date: today,
+                release_date: "",
                 effective_date: "",
                 state: "Central",
                 is_visible: true
             });
-            setReleaseInput(today);
+            setReleaseInput("");
             setEffectiveInput("");
         }
         setIsModalOpen(true);
@@ -349,8 +349,8 @@ const ResourceManager = () => {
     const handleSaveResource = async () => {
         if (!selectedResource) return;
 
-        if (!selectedResource.title || !selectedResource.effective_date) {
-            toast.error("Title and Effective Date are required");
+        if (!selectedResource.title) {
+            toast.error("Title is required");
             return;
         }
 

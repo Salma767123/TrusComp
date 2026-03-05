@@ -85,11 +85,23 @@ export const getUpdateById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const result = await pool.query('SELECT * FROM labour_law_updates WHERE id = $1', [id]);
-
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'Update not found' });
         }
-        res.json(result.rows[0]);
+
+        const update = result.rows[0];
+
+        // Fetch documents from the new table
+        const docsResult = await pool.query(
+            'SELECT * FROM labour_law_documents WHERE update_id = $1 ORDER BY id ASC',
+            [id]
+        );
+
+        if (docsResult.rows.length > 0) {
+            update.documents = docsResult.rows;
+        }
+
+        res.json(update);
     } catch (err) {
         console.error('Error fetching labour law update:', err);
         res.status(500).json({ message: 'Internal server error' });
@@ -210,8 +222,32 @@ export const upsertUpdate = async (req: Request, res: Response) => {
             ]);
         }
 
+        const savedUpdateId = result.rows[0].id;
+
+        // Sync documents with the new labour_law_documents table
+        // 1. Delete existing documents for this update
+        await client.query('DELETE FROM labour_law_documents WHERE update_id = $1', [savedUpdateId]);
+
+        // 2. Insert new documents
+        if (Array.isArray(safeDocuments) && safeDocuments.length > 0) {
+            for (const doc of safeDocuments) {
+                const insertDocQuery = `
+                    INSERT INTO labour_law_documents (update_id, title, description, year, month, url)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                `;
+                await client.query(insertDocQuery, [
+                    savedUpdateId,
+                    doc.title || '',
+                    doc.description || '',
+                    doc.year || new Date(release_date).getFullYear(),
+                    doc.month || new Date(release_date).toLocaleString('default', { month: 'long' }),
+                    doc.url || ''
+                ]);
+            }
+        }
+
         await client.query('COMMIT');
-        console.log('[LabourLaw] Save successful:', result.rows[0].id);
+        console.log('[LabourLaw] Save successful:', savedUpdateId);
         res.json(result.rows[0]);
     } catch (err: any) {
         await client.query('ROLLBACK');

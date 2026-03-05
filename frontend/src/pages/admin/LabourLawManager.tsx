@@ -58,6 +58,8 @@ interface LabourLawUpdate {
 interface DocumentItem {
     title: string;
     description: string;
+    year: number;
+    month: string;
     url: string;
 }
 
@@ -245,12 +247,26 @@ const LabourLawManager = () => {
         setIsModalOpen(true);
     };
 
+    const YEARS = Array.from({ length: 36 }, (_, i) => 2000 + i);
+    const MONTHS = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
     const handleSave = async () => {
         if (!selectedUpdate) return;
 
         if (!selectedUpdate.title || !selectedUpdate.release_date) {
             toast.error("Title and Release Date are required");
             return;
+        }
+
+        // Validate documents
+        for (const doc of selectedUpdate.documents) {
+            if (!doc.year || !doc.month || !doc.url) {
+                toast.error("Year, Month, and File are required for each document");
+                return;
+            }
         }
 
         if (selectedUpdate.end_date && new Date(selectedUpdate.end_date) <= new Date(selectedUpdate.release_date)) {
@@ -330,7 +346,7 @@ const LabourLawManager = () => {
         if (!selectedUpdate) return;
         setSelectedUpdate({
             ...selectedUpdate,
-            documents: [...selectedUpdate.documents, { title: "", description: "", url: "" }]
+            documents: [...selectedUpdate.documents, { title: "", description: "", year: new Date().getFullYear(), month: MONTHS[new Date().getMonth()], url: "" }]
         });
     };
 
@@ -342,7 +358,7 @@ const LabourLawManager = () => {
         });
     };
 
-    const updateDocument = (index: number, field: keyof DocumentItem, value: string) => {
+    const updateDocument = (index: number, field: keyof DocumentItem, value: any) => {
         if (!selectedUpdate) return;
         const newDocs = [...selectedUpdate.documents];
         newDocs[index] = { ...newDocs[index], [field]: value };
@@ -778,6 +794,36 @@ const LabourLawManager = () => {
                                         </div>
                                         <Input value={doc.title} onChange={(e) => updateDocument(index, 'title', e.target.value)} placeholder="Document Title" className="h-8 text-xs" />
                                         <Input value={doc.description} onChange={(e) => updateDocument(index, 'description', e.target.value)} placeholder="Brief description" className="h-8 text-xs" />
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Year</label>
+                                                <Select value={doc.year?.toString()} onValueChange={(val) => updateDocument(index, 'year' as any, parseInt(val))}>
+                                                    <SelectTrigger className="h-8 text-xs">
+                                                        <SelectValue placeholder="Select Year" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {YEARS.map(y => (
+                                                            <SelectItem key={y} value={y.toString()} className="text-xs">{y}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Month</label>
+                                                <Select value={doc.month} onValueChange={(val) => updateDocument(index, 'month' as any, val)}>
+                                                    <SelectTrigger className="h-8 text-xs">
+                                                        <SelectValue placeholder="Select Month" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {MONTHS.map(m => (
+                                                            <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+
                                         <div className="flex items-center gap-2">
                                             <Input
                                                 type="file"

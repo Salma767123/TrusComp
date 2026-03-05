@@ -13,6 +13,13 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { useSEO } from "@/hooks/useSEO";
@@ -28,7 +35,7 @@ interface LabourLawUpdate {
     speaker_org: string | null;
     speaker_image: string | null;
     webinar_link: string | null;
-    documents: Array<{ title: string; description: string; url: string }>;
+    documents: Array<{ id?: number; title: string; description: string; year: number; month: string; url: string }>;
     videos: Array<{ title: string; url: string }>;
 }
 
@@ -44,6 +51,8 @@ const MonthlyLabourLawDetail = () => {
     const [loading, setLoading] = useState(true);
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [selectedYear, setSelectedYear] = useState<string>("all");
+    const [selectedMonth, setSelectedMonth] = useState<string>("all");
 
     const handleCopyLink = () => {
         if (resource?.webinar_link) {
@@ -99,6 +108,19 @@ const MonthlyLabourLawDetail = () => {
         const match = url.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
     };
+
+    // Filter logic
+    const availableYears = Array.from(new Set(resource?.documents?.map(doc => doc.year).filter(Boolean))).sort((a, b) => b - a);
+    const availableMonths = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ].filter(month => resource?.documents?.some(doc => doc.month === month));
+
+    const filteredDocuments = resource?.documents?.filter(doc => {
+        const yearMatch = selectedYear === "all" || (doc.year && doc.year.toString() === selectedYear);
+        const monthMatch = selectedMonth === "all" || doc.month === selectedMonth;
+        return yearMatch && monthMatch;
+    }) || [];
 
     // Graceful fallback
     if (loading) {
@@ -258,61 +280,95 @@ const MonthlyLabourLawDetail = () => {
                     </div>
 
                     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                        <div className="mb-10 border-l-4 border-[#FF8C00] pl-6">
-                            <h2 className="text-3xl font-bold text-gray-900 mb-2">Resource Materials</h2>
-                            <p className="text-gray-600">Download curated compliance documents and reference materials</p>
+                        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-gray-100 pb-8">
+                            <div className="border-l-4 border-[#FF8C00] pl-6">
+                                <h2 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight">Resource Materials</h2>
+                                <p className="text-gray-500 text-sm">Download curated compliance documents and official updates</p>
+                            </div>
+
+                            {/* Website Standard Filter Dropdowns */}
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                    <SelectTrigger className="w-full sm:w-[140px] bg-white border-gray-200 rounded-xl font-bold text-xs h-10 hover:border-[#FF8C00] focus:ring-4 focus:ring-orange-500/5 transition-all shadow-sm">
+                                        <SelectValue placeholder="All Years" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Years</SelectItem>
+                                        {availableYears.map(year => (
+                                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                                    <SelectTrigger className="w-full sm:w-[140px] bg-white border-gray-200 rounded-xl font-bold text-xs h-10 hover:border-[#FF8C00] focus:ring-4 focus:ring-orange-500/5 transition-all shadow-sm">
+                                        <SelectValue placeholder="All Months" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Months</SelectItem>
+                                        {availableMonths.map(month => (
+                                            <SelectItem key={month} value={month}>{month}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
 
-                        <div className="flex flex-col gap-4">
-                            {resource.documents && resource.documents.length > 0 ? (
-                                resource.documents.map((doc, i) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {filteredDocuments.length > 0 ? (
+                                filteredDocuments.map((doc, i) => (
                                     <motion.div
                                         key={i}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        whileInView={{ opacity: 1, x: 0 }}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
                                         viewport={{ once: true }}
-                                        transition={{ delay: i * 0.1 }}
-                                        whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.9)" }}
-                                        className="group relative flex flex-col md:flex-row items-start md:items-center gap-6 p-5 bg-white/60 backdrop-blur-md rounded-2xl border border-white/60 shadow-sm hover:shadow-md hover:border-orange-200/50 transition-all duration-300"
+                                        transition={{ delay: i * 0.05 }}
+                                        className="group bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-xl hover:border-orange-100 transition-all duration-300 flex flex-col h-full"
                                     >
-                                        {/* Icon Container */}
-                                        <div className="flex-shrink-0">
-                                            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                                <FileText className="w-6 h-6 text-[#FF8C00]" />
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                                <FileText className="w-5 h-5 text-[#FF8C00]" />
                                             </div>
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-50 text-gray-400 border border-gray-100">
+                                                PDF
+                                            </span>
                                         </div>
 
-                                        {/* Content Area */}
-                                        <div className="flex-grow min-w-0 space-y-1">
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#FF8C00] transition-colors line-clamp-1">
-                                                    {doc.title}
-                                                </h3>
-                                                <span className="hidden sm:inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-500 border border-gray-200">
-                                                    PDF
+                                        <div className="flex-grow mb-6">
+                                            {/* <div className="flex items-center gap-2 mb-3">
+                                                <span className="text-[10px] font-black text-[#FF8C00] uppercase tracking-[0.15em] bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100/50">
+                                                    {doc.month} {doc.year}
                                                 </span>
-                                            </div>
-                                            <p className="text-sm text-gray-500 line-clamp-2 md:line-clamp-1 leading-relaxed">
+                                            </div> */}
+                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-[#FF8C00] transition-colors leading-snug mb-2 line-clamp-2">
+                                                {doc.title}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed font-medium">
                                                 {doc.description}
                                             </p>
                                         </div>
 
-                                        {/* Action Area */}
-                                        <div className="flex-shrink-0 w-full md:w-auto mt-2 md:mt-0">
-                                            <button
-                                                onClick={() => window.open(doc.url, '_blank')}
-                                                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-[#FF8C00] hover:text-white hover:border-[#FF8C00] transition-all group-active:scale-[0.98]"
-                                            >
-                                                <span>Download</span>
-                                                <Download className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={() => window.open(doc.url, '_blank')}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-gray-700 hover:bg-[#FF8C00] hover:text-white hover:border-[#FF8C00] transition-all group-active:scale-[0.95]"
+                                        >
+                                            <span>Download</span>
+                                            <Download className="w-3.5 h-3.5" />
+                                        </button>
                                     </motion.div>
                                 ))
                             ) : (
-                                <div className="text-center py-16 bg-white/40 rounded-3xl border border-dashed border-gray-200">
-                                    <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                    <p className="text-gray-400 font-medium">No documents available at the moment.</p>
+                                <div className="col-span-full text-center py-20 bg-white/40 rounded-3xl border border-dashed border-gray-200">
+                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                                        <FileText className="w-8 h-8 text-gray-200" />
+                                    </div>
+                                    <p className="text-gray-400 font-medium">No documents match the selected filters.</p>
+                                    <button
+                                        onClick={() => { setSelectedYear('all'); setSelectedMonth('all'); }}
+                                        className="mt-4 text-sm font-bold text-[#FF8C00] hover:underline"
+                                    >
+                                        Reset Filters
+                                    </button>
                                 </div>
                             )}
                         </div>
