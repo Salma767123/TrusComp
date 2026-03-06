@@ -68,13 +68,13 @@ const Header = () => {
 
           {/* Desktop CTA & Admin */}
           <div className="hidden lg:flex items-center gap-4">
-            <Link
+            {/* <Link
               to="/admin/login"
               className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/5"
             >
               <ShieldCheck className="w-4 h-4" />
               Admin Login
-            </Link>
+            </Link> */}
             <Button asChild className="btn-primary shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all">
               <Link to="/contact">Book Now</Link>
             </Button>
@@ -129,14 +129,14 @@ const Header = () => {
                 </Link>
               ))}
               <div className="mt-4 px-4 flex flex-col gap-3">
-                <Link
+                {/* <Link
                   to="/admin/login"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center justify-center gap-2 py-3 text-sm font-semibold text-muted-foreground bg-secondary rounded-lg active:scale-95 transition-all"
                 >
                   <ShieldCheck className="w-4 h-4" />
                   Admin Login
-                </Link>
+                </Link> */}
                 <Button asChild className="btn-primary w-full shadow-lg shadow-primary/20">
                   <Link to="/contact" onClick={() => setIsOpen(false)}>Book Now</Link>
                 </Button>
