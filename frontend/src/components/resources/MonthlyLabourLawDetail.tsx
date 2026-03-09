@@ -519,7 +519,7 @@ const MonthlyLabourLawDetail = () => {
 
             {/* Registration Modal */}
             <Dialog open={isRegisterModalOpen} onOpenChange={setIsRegisterModalOpen}>
-                <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white rounded-2xl overflow-hidden shadow-2xl">
+                <DialogContent className="sm:max-w-lg bg-slate-900 border-white/10 text-white rounded-2xl overflow-hidden shadow-2xl p-0">
                     <DialogHeader className="pt-8 px-6 pb-2">
                         <DialogTitle className="text-2xl font-bold flex items-center gap-3">
                             <div className="w-10 h-10 bg-[#FF8C00]/20 rounded-xl flex items-center justify-center">
@@ -547,8 +547,8 @@ const MonthlyLabourLawDetail = () => {
                             {resource.webinar_link && (
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Webinar URL</label>
-                                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-1.5 focus-within:border-[#FF8C00]/50 transition-colors group/input">
-                                        <div className="flex-1 px-3 py-2 text-sm text-gray-300 truncate font-mono">
+                                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-2 focus-within:border-[#FF8C00]/50 transition-colors group/input">
+                                        <div className="flex-1 px-3 py-2 text-sm text-gray-300 break-all font-mono leading-relaxed">
                                             {resource.webinar_link}
                                         </div>
                                         <button
